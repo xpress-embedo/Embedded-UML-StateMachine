@@ -1,0 +1,8 @@
+# Sublime Workspace Files
+*.sublime-project
+*.sublime-workspace
+
+# Proteus Files and Folders
+Project*Backups/
+**/Projects Pro/
+*.workspace
