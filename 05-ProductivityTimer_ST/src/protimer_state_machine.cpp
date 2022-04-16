@@ -11,9 +11,14 @@ static void display_time( uint32_t time );
 void protimer_init( protimer_t *mobj )
 {
   event_t entry_action;
+  e_handler_t e_handler;
   entry_action.sig = ENTRY;
   mobj->active_state = IDLE;
   mobj->pro_time = 0u;
+  /* Now we have to call the entry function of the IDLE state */
+  e_handler = (e_handler_t)mobj->state_table[(IDLE*MAX_SIGNALS) + ENTRY];
+  /* Execuet the Callback function */
+  (*e_handler)( mobj, &entry_action);
 }
 
 /* Productive Timer Project All Event Handlers Function */

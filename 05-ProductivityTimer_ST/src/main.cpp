@@ -80,9 +80,16 @@ static void protimer_event_dispatcher( protimer_t *const mobj, event_t const *co
 {
   event_status_t status;
   protimer_state_t source, target;
+  e_handler_t e_handler;
   
   source = mobj->active_state;
-  status = protimer_state_machine( mobj, e );
+  /* This will be replaced as below status = protimer_state_machine( mobj, e ); */
+  e_handler = (e_handler_t)(mobj->state_table[ (mobj->active_state*MAX_SIGNALS) + e->sig ] );
+  /* Check for NULL Entries also */
+  if( e_handler )
+  {
+    status = (*e_handler)( mobj, e );
+  }
 
   if(status == EVENT_TRANSITION)
   {
@@ -90,13 +97,23 @@ static void protimer_event_dispatcher( protimer_t *const mobj, event_t const *co
     event_t ee;
     /* run the exit action for the source state */
     ee.sig = EXIT;
-    mobj->active_state = source;
-    protimer_state_machine( mobj, &ee );
+    /* mobj->active_state = source;
+    protimer_state_machine( mobj, &ee ); */
+    e_handler = (e_handler_t)(mobj->state_table[ (source*MAX_SIGNALS) + EXIT ] );
+    if( e_handler )
+    {
+      (*e_handler)( mobj, &ee );
+    }
 
     /* run the entry action for the target state */
     ee.sig = ENTRY;
-    mobj->active_state = target;
-    protimer_state_machine( mobj , &ee );
+    /* mobj->active_state = target;
+    protimer_state_machine( mobj , &ee ); */
+    e_handler = (e_handler_t)(mobj->state_table[ (target*MAX_SIGNALS) + ENTRY ] );
+    if( e_handler )
+    {
+      (*e_handler)( mobj, &ee );
+    }
   }
 }
 
