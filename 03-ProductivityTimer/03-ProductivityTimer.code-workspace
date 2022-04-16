@@ -1,8 +1,11 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"name": "04-ProductivityTimer-SH",
+			"path": "..\\04-ProductivityTimer-SH"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"editor.tabSize": 2
+	}
 }
