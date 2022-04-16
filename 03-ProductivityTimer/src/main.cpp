@@ -10,11 +10,14 @@ static protimer_t protimer;
 
 void setup() 
 {
+  /* This is used for debugging */
+  Serial.begin(115200);
   pinMode( PIN_BUTTON1, INPUT );
   pinMode( PIN_BUTTON2, INPUT );
   pinMode( PIN_BUTTON3, INPUT );
-  protimer_init( &protimer );
   display_init();
+  
+  protimer_init( &protimer );
 }
 
 void loop() 

@@ -16,8 +16,11 @@ static event_status_t protimer_state_handler_STAT( protimer_t  *const mobj, even
 /* Public Function Definitions */
 void protimer_init( protimer_t *mobj )
 {
+  event_t entry_action;
+  entry_action.sig = ENTRY;
   mobj->active_state = IDLE;
   mobj->pro_time = 0u;
+  protimer_state_machine( mobj, &entry_action );
 }
 
 event_status_t protimer_state_machine( protimer_t *const mobj,  event_t const *const e )
@@ -57,9 +60,11 @@ static event_status_t protimer_state_handler_IDLE( protimer_t *const mobj, event
     {
       mobj->curr_time = 0;
       mobj->elapsed_time = 0;
+      Serial.println("Message Displayed-Start");
       display_time(0);
-      display_message("Set",0,0);
-      display_message("time",0,1);
+      display_message("Set", 0, 0);
+      display_message("time", 0, 1);
+      Serial.println("Message Displayed-End");
       return EVENT_HANDLED;
     }
     case EXIT:
@@ -263,16 +268,16 @@ static void display_time( uint32_t time )
   char buf[7];
   String time_msg;
   
-  uint16_t m = time / 60;
-  uint8_t s = time % 60;
-  sprintf(buf,"%03d:%02d",m,s);
+  uint16_t minutes = time / 60;
+  uint8_t seconds = time % 60;
+  sprintf(buf,"%03d:%02d", minutes, seconds );
   
   time_msg = (String)buf;
   lcd_set_cursor( 5, 0 );
   lcd_print_string( time_msg );
 }
 
-static void display_message(String s,uint8_t c , uint8_t r)
+static void display_message( String s, uint8_t c , uint8_t r )
 {
   lcd_set_cursor( c, r);
   lcd_print_string( s );
