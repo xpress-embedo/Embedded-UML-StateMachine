@@ -41,7 +41,8 @@ typedef enum
   ABRT,
   /* Internal Activity Signals */
   ENTRY,
-  EXIT
+  EXIT,
+  MAX_SIGNALS
 } protimer_signal_t;
 
 /* Various States of the Application */
@@ -52,6 +53,7 @@ typedef enum
   COUNTDOWN,
   PAUSE,
   STAT,
+  MAX_STATES
 } protimer_state_t;
 
 /* Generic (Super) Event Structure */
@@ -87,8 +89,11 @@ typedef struct
   uint32_t          elapsed_time;
   uint32_t          pro_time;
   protimer_state_t  active_state;
+  uintptr_t         *state_table;
 } protimer_t;
 
+/* Function Pointer Type for Event Handlers */
+typedef event_status_t (*e_handler_t)(protimer_t *const mobj, event_t const *const e );
 
 /* Public Function Prototpes */
 void protimer_init( protimer_t *mobj );
@@ -118,7 +123,7 @@ event_status_t PAUSE_dec_time( protimer_t *const mobj, event_t const *const e );
 event_status_t PAUSE_start_pause( protimer_t *const mobj, event_t const *const e );
 event_status_t PAUSE_abrt( protimer_t *const mobj, event_t const *const e );
 
-event_status_t STAT_inc_time( protimer_t *const mobj, event_t const *const e );
+event_status_t STAT_entry( protimer_t *const mobj, event_t const *const e );
 event_status_t STAT_exit( protimer_t *const mobj, event_t const *const e );
 event_status_t STAT_time_tick( protimer_t *const mobj, event_t const *const e );
 

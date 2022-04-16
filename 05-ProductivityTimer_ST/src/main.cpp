@@ -1,6 +1,7 @@
 #include "main.h"
 
 /* Private Function Prototypes */
+static void protimer_stable_table_init( protimer_t *const mobj );
 static void protimer_event_dispatcher( protimer_t *const mobj, event_t const *const e );
 static uint8_t process_button_pad_value( uint8_t btn_pad_value );
 static void display_init( void );
@@ -17,6 +18,7 @@ void setup()
   pinMode( PIN_BUTTON3, INPUT );
   display_init();
 
+  protimer_stable_table_init( &protimer );
   protimer_init( &protimer );
 }
 
@@ -134,6 +136,21 @@ static uint8_t process_button_pad_value( uint8_t btn_pad_value )
     break;
   }
   return 0;
+}
+
+static void protimer_stable_table_init( protimer_t *const mobj )
+{
+  static e_handler_t protimer_state_table[MAX_STATES][MAX_SIGNALS] = 
+  {
+    /* SIGNALS-->   INC_TIME            DEC_TIME              TIME_TICK               START_PAUSE               ABORT               ENTRY               EXIT */
+    [IDLE]      = { &IDLE_inc_time,     NULL,                 &IDLE_time_tick,        &IDLE_pause,              NULL,               &IDLE_entry,        &IDLE_exit },
+    [TIME_SET]  = { &TIME_SET_inc_time, &TIME_SET_dec_time,   NULL,                   &TIME_SET_start_pause,    &TIME_SET_abrt,     &TIME_SET_entry,    &TIME_SET_exit},
+    [COUNTDOWN] = { NULL,               NULL,                 &COUNTDOWN_time_tick,   &COUNTDOWN_start_pause,   &COUNTDOWN_abrt,    NULL,               &COUNTDOWN_exit},
+    [PAUSE]     = { &PAUSE_inc_time,    &PAUSE_dec_time,      NULL,                   &PAUSE_start_pause,       &PAUSE_abrt,        &PAUSE_entry,       &PAUSE_exit},
+    [STAT]      = { NULL,               NULL,                 &STAT_time_tick,        NULL,                     NULL,               &STAT_entry,        &STAT_exit}
+  };
+
+  mobj->state_table = (uintptr_t*)(&protimer_state_table[0][0]);
 }
 
 static void display_init( void )

@@ -181,7 +181,7 @@ event_status_t PAUSE_abrt( protimer_t *const mobj, event_t const *const e )
   return EVENT_TRANSITION;
 }
 
-event_status_t STAT_inc_time( protimer_t *const mobj, event_t const *const e )
+event_status_t STAT_entry( protimer_t *const mobj, event_t const *const e )
 {
   display_time( mobj->pro_time );
   display_message("Productive time", 1, 1);
