@@ -29,22 +29,27 @@ event_status_t protimer_state_machine( protimer_t *const mobj,  event_t const *c
   {
     case IDLE:
     {
+      Serial.println("IDLE STATE");
       return protimer_state_handler_IDLE( mobj, e );
     }
     case TIME_SET:
     {
+      Serial.println("TIME SET STATE");
       return protimer_state_handler_TIME_SET( mobj, e );
     }
     case COUNTDOWN:
     {
+      Serial.println("COUNTDOWN STATE");
       return protimer_state_handler_COUNTDOWN( mobj, e);
     }
     case PAUSE:
     {
+      Serial.println("PAUSE STATE");
       return protimer_state_handler_PAUSE( mobj, e);
     }
     case STAT:
     {
+      Serial.println("STATUS STATE");
       return protimer_state_handler_STAT( mobj, e);
     }
   }
@@ -60,11 +65,9 @@ static event_status_t protimer_state_handler_IDLE( protimer_t *const mobj, event
     {
       mobj->curr_time = 0;
       mobj->elapsed_time = 0;
-      Serial.println("Message Displayed-Start");
       display_time(0);
       display_message("Set", 0, 0);
       display_message("time", 0, 1);
-      Serial.println("Message Displayed-End");
       return EVENT_HANDLED;
     }
     case EXIT:
@@ -85,12 +88,12 @@ static event_status_t protimer_state_handler_IDLE( protimer_t *const mobj, event
     }
     case TIME_TICK:
     {
+      /* turn on the buzzer every 500ms */
       if( ((protimer_tick_event_t *)(e))->ss == 5)
       {
         do_beep();
         return EVENT_HANDLED;
       }
-
       return EVENT_IGNORED;
     }
   } /* End of Switch */
@@ -250,7 +253,8 @@ static event_status_t protimer_state_handler_STAT( protimer_t *const mobj, event
     }
     case TIME_TICK:
     {
-      if( ++tick_count == 30 )
+      tick_count++;
+      if( tick_count == 30 )
       {
         tick_count = 0;
         mobj->active_state = IDLE;
@@ -290,5 +294,6 @@ static void display_clear(void)
 
 static void do_beep(void)
 {
-  tone(PIN_BUZZER, 4000, 25);
+  /* buzzer frequency is 2Khz, and run the buzzer for 200 ms */
+  tone(PIN_BUZZER, 2000, 200);
 }

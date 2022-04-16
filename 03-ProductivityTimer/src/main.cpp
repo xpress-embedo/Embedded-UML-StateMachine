@@ -16,7 +16,7 @@ void setup()
   pinMode( PIN_BUTTON2, INPUT );
   pinMode( PIN_BUTTON3, INPUT );
   display_init();
-  
+
   protimer_init( &protimer );
 }
 
@@ -63,13 +63,13 @@ void loop()
   {
     current_time = millis();
     tick_event.super.sig = TIME_TICK;
-    ++tick_event.ss;
+    tick_event.ss++;
     if( tick_event.ss > 10 )
     {
       tick_event.ss = 1;
-      /* dispatch the event */
-      protimer_event_dispatcher( &protimer, &tick_event.super );
     }
+    /* dispatch the event */
+    protimer_event_dispatcher( &protimer, &tick_event.super );
   }
 }
 
