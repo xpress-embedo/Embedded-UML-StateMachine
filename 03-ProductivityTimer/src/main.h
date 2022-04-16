@@ -2,6 +2,8 @@
 #define MAIN_H_
 
 #include <Arduino.h>
+#include <LiquidCrystal.h>
+#include "lcd.h"
 
 #define PIN_BUTTON1             2u
 #define PIN_BUTTON2             3u
@@ -90,6 +92,6 @@ typedef struct
 
 /* Public Function Prototpes */
 void protimer_init( protimer_t *mobj );
-event_status_t protimer_state_machine( protimer_t *mobj, event_t *e );
+event_status_t protimer_state_machine( protimer_t *const mobj,  event_t const *const e );
 
 #endif 

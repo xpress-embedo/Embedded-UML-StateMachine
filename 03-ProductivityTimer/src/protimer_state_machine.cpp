@@ -20,7 +20,7 @@ void protimer_init( protimer_t *mobj )
   mobj->pro_time = 0u;
 }
 
-event_status_t protimer_state_machine( protimer_t *const mobj, event_t *const e )
+event_status_t protimer_state_machine( protimer_t *const mobj,  event_t const *const e )
 {
   switch( mobj->active_state )
   {
