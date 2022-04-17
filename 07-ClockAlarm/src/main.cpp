@@ -11,6 +11,7 @@ void setup()
 {
   Serial.begin(115200);
   delay(10);
+  Timer1_Setup();
   Serial.println("Clock Alarm Project Starting..");
 }
 

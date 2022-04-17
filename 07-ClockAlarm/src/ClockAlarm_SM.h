@@ -41,9 +41,19 @@ enum alarm_status
   ALARM_ON
 };
 
+typedef enum time_format
+{
+  FORMAT_24H = 0,
+  FORMAT_AM,
+  FORMAT_PM,
+} time_format_t;
+
 #define INITIAL_CURRENT_TIME    (((10ul*3600ul) + (10ul*60ul) + 10ul) * 10ul)    /* 10 hours 10 minutes 10 seconds */
 #define INITIAL_ALARM_TIME      (8ul*3600ul)                                     /* 8 hours */
 #define MAX_TIME                (864000ul)                                       /* 24*3600*10 */
+/* Display Related Macros */
+#define TICKING_CURR_TIME_ROW   (0u)
+#define TICKING_CURR_TIME_COL   (3u)
 
 /*.$declare${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm_ctor} ...............................................*/

@@ -15,6 +15,11 @@ NOTE: don't get confuse with static keyword, this static is in relevance to clas
    <attribute name="obj" type="Clock_Alarm" visibility="0x02" properties="0x01"/>
    <operation name="GetCurrentTime" type="uint32_t" visibility="0x00" properties="0x01">
     <documentation>This returns the value of the current_time attribute of the class, which is static with reference to class Clock_Alarm.</documentation>
+    <code>uint32_t temp = 0u;
+noInterrupts();
+temp = Clock_Alarm_current_time;
+interrupts();
+return (temp);</code>
    </operation>
    <operation name="UpdateCurrentTime" type="void" visibility="0x00" properties="0x01">
     <code>/* this function is called from ISR hence we don't need to disable and enable
@@ -33,6 +38,48 @@ it directly, it should be an atomic update */
 noInterrupts();
 Clock_Alarm_current_time = new_current_time;
 interrupts();</code>
+   </operation>
+   <operation name="DisplayCurrentTime" type="void" visibility="0x00" properties="0x00">
+    <documentation>/*
+ * Description : Displays current time depending upon the time mode
+ * param1: 'me' pointer
+ * param2 : row number of the LCD
+ * param3: column number of the LCD
+ */</documentation>
+    <parameter name="row" type="uint8_t"/>
+    <parameter name="col" type="uint8_t"/>
+    <code>String time_as_string;
+uint32_t time_;
+
+/* convert to number of seconds */
+uint32_t time24h = Clock_Alarm_GetCurrentTime()/10;
+/* extract sub-second to append later */
+uint8_t ss = time24h % 10U;
+
+if( me-&gt;time_mode == TIME_MODE_24H )
+{
+  /* already in 24 hour format */
+  time_ = time24h;
+}
+else
+{
+  time_ = Convert24H_To_12H( time24h );
+}
+
+/* convert integer time to string in hh:mm:ss format*/
+time_as_string = IntegerTime_ToString( time_ );
+/* concatenate sub-seconds */
+time_as_string.concat('.');
+time_as_string.concat( ss );
+
+/* if mode is 12H , concatenate  am/pm information */
+if( me-&gt;time_mode == TIME_MODE_12H )
+{
+  time_as_string.concat(' ');
+  time_as_string.concat( GetAM_PM(time24h) );
+}
+/* update display */
+display_write(time_as_string, row, col);</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1/1">
@@ -53,6 +100,7 @@ me-&gt;alarm_status = ALARM_OFF;</action>
       <history_glyph conn="8,28,3,2,6,-4"/>
      </history>
      <state name="Ticking">
+      <entry>Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW, TICKING_CURR_TIME_COL );</entry>
       <tran trig="SET" target="../../2/2">
        <tran_glyph conn="30,17,1,3,19">
         <action box="0,-2,10,2"/>
@@ -63,7 +111,9 @@ me-&gt;alarm_status = ALARM_OFF;</action>
         <action box="0,-2,10,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="12,14,18,10"/>
+      <state_glyph node="12,14,18,10">
+       <entry box="1,2,6,2"/>
+      </state_glyph>
      </state>
      <state name="Settings">
       <tran trig="OK" target="../../1">
@@ -108,12 +158,133 @@ me-&gt;alarm_status = ALARM_OFF;</action>
 #include &quot;lcd.h&quot;
 #include &quot;ClockAlarm_SM.h&quot;
 
+/* Some Helper macros */
+#define GET_HOUR(seconds)     ( seconds/3600ul )
+#define GET_MIN(seconds)      ( (seconds/60ul) % 60ul )
+#define GET_SEC(seconds)      ( seconds % 60ul )
+#define DIGIT1(d)       	  ( d / 10u)
+#define DIGIT2(d)       	  ( d % 10u)
+
 $declare${HSMs::Clock_Alarm}
+
+/* Helper Function Prototypes */
+String GetAM_PM( uint32_t time24h );
+void display_write( String str_, uint8_t r, uint8_t c );
+String IntegerTime_ToString( uint32_t time_ );
+uint32_t Convert12H_To_24H( uint32_t time12h, time_format_t am_pm );
+uint32_t Convert24H_To_12H( uint32_t time24h );
 
 $define${HSMs::Clock_Alarm_ctor}
 
 $define${HSMs::Clock_Alarm}
 
+/*
+ * Description : Decodes AM/PM information from given time in 24H format
+ * param1: Integer time in 24H format
+ * return : A string value(&quot;AM&quot; or &quot;PM&quot;)
+ */
+String GetAM_PM( uint32_t time24h )
+{
+    String am_pm;
+    uint8_t hour = GET_HOUR( time24h );
+    if(hour == 0U)
+    {
+        am_pm = &quot;AM&quot;;
+    }
+    else if( hour &gt; 12U)
+    {
+        am_pm = &quot;PM&quot;;
+    }
+    else if ( hour == 12U )
+    {
+        am_pm = &quot;PM&quot;;
+    }
+    else
+    {
+        am_pm = &quot;AM&quot;;
+    }
+
+    return am_pm;
+}
+
+/*
+ * Description: Writes a message to the LCD at given row and column number
+ * param1 : Message to write in 'String' format
+ * param2 : row number of the LCD
+ * param2 : column number of the LCD
+ */
+void display_write( String str_, uint8_t r, uint8_t c )
+{
+    lcd_set_cursor( c,r );
+    lcd_print_string( str_ );
+}
+
+/*
+ * Description: converts an 'integer' time to 'String' time
+ * param1 : time represented in terms of number of seconds
+ * return : time as 'String' value in the format HH:MM:SS
+ */
+String IntegerTime_ToString( uint32_t time_ )
+{
+    uint8_t hour, minute, second;
+    char buffer[10];       // 00:00:00+null
+    hour   = GET_HOUR(time_);   /* Extract how many hours the 'time_' represent */
+    minute = GET_MIN(time_);    /* Extract how many minutes the 'time_' represent */
+    second = GET_SEC(time_);	/* Extract how many seconds the 'time_' represent */
+    sprintf( buffer, &quot;%02d:%02d:%02d&quot;, hour, minute, second );
+    return (String)buffer;
+}
+
+/*
+ * Description: Converts given integer time in 12H format to integer time 24H format
+ * param1 : Integer time in 12H format
+ * param2 : time format of type time_format_t
+ * return : Integer time in 24H format
+ */
+uint32_t Convert12H_To_24H( uint32_t time12h, time_format_t am_pm )
+{
+    uint8_t hour;
+    uint32_t time24h;
+    hour = GET_HOUR( time12h );
+    if(am_pm == FORMAT_AM )
+    {
+        time24h = (hour == 12) ? (time12h-(12UL * 3600UL)) : time12h;
+    }
+    else
+    {
+        time24h = (hour == 12)? time12h : (time12h +(12UL * 3600UL));
+    }
+    return time24h;
+}
+
+/*
+ * Description: Converts given integer time in 24H format to integer time 12H format
+ * param1 : Integer time in 24H format
+ * return : Integer time in 12H format
+ */
+uint32_t Convert24H_To_12H( uint32_t time24h )
+{
+    uint8_t hour;
+    uint32_t time12h;
+    hour = GET_HOUR(time24h);
+
+    if(hour == 0)
+    {
+        time12h = time24h + (12UL * 3600UL);
+    }
+    else
+    {
+        if( (hour &lt; 12UL) || (hour == 12UL) )
+        {
+            return time24h;
+        }
+        else
+        {
+            time12h = time24h - (12UL * 3600UL);
+        }
+    }
+    return time12h;
+}
 
 ISR( TIMER1_COMPA_vect )
 {
@@ -147,9 +318,19 @@ enum alarm_status
   ALARM_ON
 };
 
+typedef enum time_format
+{
+  FORMAT_24H = 0,
+  FORMAT_AM,
+  FORMAT_PM,
+} time_format_t;
+
 #define INITIAL_CURRENT_TIME    (((10ul*3600ul) + (10ul*60ul) + 10ul) * 10ul)    /* 10 hours 10 minutes 10 seconds */
 #define INITIAL_ALARM_TIME      (8ul*3600ul)                                     /* 8 hours */
 #define MAX_TIME                (864000ul)                                       /* 24*3600*10 */
+/* Display Related Macros */
+#define TICKING_CURR_TIME_ROW   (0u)
+#define TICKING_CURR_TIME_COL   (3u)
 
 $declare${HSMs::Clock_Alarm_ctor}
 
