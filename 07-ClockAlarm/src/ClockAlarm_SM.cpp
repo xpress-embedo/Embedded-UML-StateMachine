@@ -28,7 +28,6 @@ typedef struct Clock_Alarm {
     QHsm super;
 
 /* private: */
-    uint32_t current_time;
     uint32_t temp_time;
     uint32_t alarm_time;
     uint8_t alarm_status;
@@ -37,6 +36,10 @@ typedef struct Clock_Alarm {
 /* private state histories */
     QStateHandler hist_Clock;
 } Clock_Alarm;
+
+/* public: */
+static uint32_t Clock_Alarm_GetCurrentTime(void);
+extern uint32_t Clock_Alarm_current_time;
 extern Clock_Alarm Clock_Alarm_obj;
 
 /* protected: */
@@ -64,7 +67,12 @@ void Clock_Alarm_ctor(void) {
 
 /*.$define${HSMs::Clock_Alarm} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm} ....................................................*/
+uint32_t Clock_Alarm_current_time;
 Clock_Alarm Clock_Alarm_obj;
+/*.${HSMs::Clock_Alarm::GetCurrentTime} ....................................*/
+static uint32_t Clock_Alarm_GetCurrentTime(void) {
+}
+
 /*.${HSMs::Clock_Alarm::SM} ................................................*/
 static QState Clock_Alarm_initial(Clock_Alarm * const me) {
     /*.${HSMs::Clock_Alarm::SM::initial} */
@@ -172,3 +180,8 @@ static QState Clock_Alarm_Alarm_Notify(Clock_Alarm * const me) {
     return status_;
 }
 /*.$enddef${HSMs::Clock_Alarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+
+
+ISR( TIMER1_COMPA_vect )
+{
+}

@@ -3,12 +3,19 @@
  <framework name="qpn"/>
  <package name="HSMs" stereotype="0x02">
   <class name="Clock_Alarm" superclass="qpn::QHsm">
-   <attribute name="current_time" type="uint32_t" visibility="0x02" properties="0x00"/>
+   <attribute name="current_time" type="uint32_t" visibility="0x02" properties="0x01">
+    <documentation>Current Time is a static variable for the Class, which means that even if there are multiple instances of the class, this should be same for all the instances.
+Reason is simple because we can't have different current_time value for multiple instances, this is something same for all.
+NOTE: don't get confuse with static keyword, this static is in relevance to classes.</documentation>
+   </attribute>
    <attribute name="temp_time" type="uint32_t" visibility="0x02" properties="0x00"/>
    <attribute name="alarm_time" type="uint32_t" visibility="0x02" properties="0x00"/>
    <attribute name="alarm_status" type="uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="time_mode" type="uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="obj" type="Clock_Alarm" visibility="0x02" properties="0x01"/>
+   <operation name="GetCurrentTime" type="uint32_t" visibility="0x00" properties="0x01">
+    <documentation>This returns the value of the current_time attribute of the class, which is static with reference to class Clock_Alarm.</documentation>
+   </operation>
    <statechart properties="0x00">
     <initial target="../1/1">
      <initial_glyph conn="4,2,4,3,15,8">
@@ -80,6 +87,11 @@ $declare${HSMs::Clock_Alarm}
 $define${HSMs::Clock_Alarm_ctor}
 
 $define${HSMs::Clock_Alarm}
+
+
+ISR( TIMER1_COMPA_vect )
+{
+}
 </text>
    </file>
    <file name="ClockAlarm_SM.h">
