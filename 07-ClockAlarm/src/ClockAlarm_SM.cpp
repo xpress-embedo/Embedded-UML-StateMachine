@@ -16,3 +16,34 @@
 * for more details.
 */
 /*.$endhead${HSMs::../src::ClockAlarm_SM.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+#include <Arduino.h>
+#include "qpn.h"
+#include "lcd.h"
+#include "ClockAlarm_SM.h"
+
+/*.$declare${HSMs::Clock_Alarm} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*.${HSMs::Clock_Alarm} ....................................................*/
+typedef struct Clock_Alarm {
+/* protected: */
+    QHsm super;
+
+/* private: */
+    uint32_t current_time;
+    uint32_t temp_time;
+    uint32_t alarm_time;
+    uint8_t alarm_status;
+    uint8_t time_mode;
+
+/* private state histories */
+    QStateHandler hist_Clock;
+} Clock_Alarm;
+
+/* protected: */
+static QState Clock_Alarm_initial(Clock_Alarm * const me);
+static QState Clock_Alarm_Clock(Clock_Alarm * const me);
+static QState Clock_Alarm_Ticking(Clock_Alarm * const me);
+static QState Clock_Alarm_Settings(Clock_Alarm * const me);
+static QState Clock_Alarm_Clock_Setting(Clock_Alarm * const me);
+static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me);
+static QState Clock_Alarm_Alarm_Notify(Clock_Alarm * const me);
+/*.$enddecl${HSMs::Clock_Alarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/

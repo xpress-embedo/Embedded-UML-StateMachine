@@ -2,6 +2,16 @@
 #define LCD_H_
 
 #include <Arduino.h>
+#include <LiquidCrystal.h>
+
+/* LCD Pin Connections */
+#define PIN_LCD_RS              5u
+#define PIN_LCD_RW              6u
+#define PIN_LCD_EN              7u
+#define PIN_LCD_D4              8u
+#define PIN_LCD_D5              9u
+#define PIN_LCD_D6              10u
+#define PIN_LCD_D7              11u
 
 void lcd_clear( void );
 void lcd_print_char( char c );

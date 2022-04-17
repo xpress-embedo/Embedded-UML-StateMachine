@@ -19,4 +19,14 @@
 #ifndef CLOCK_ALARM_H
 #define CLOCK_ALARM_H
 
+enum ClockAlarm_Signals
+{
+  SET_SIG = Q_USER_SIG,    /* Q_USER_SIG marks the beginning of User Signals */
+  OK_SIG,
+  ABRT_SIG,
+  ALARM_SIG,
+  TICK_SIG,
+  MAX_SIG
+};
+
 #endif
