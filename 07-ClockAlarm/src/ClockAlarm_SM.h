@@ -29,6 +29,8 @@ enum ClockAlarm_Signals
   MAX_SIG
 };
 
+#define MAX_TIME        (864000ul)        /* 24*3600*10 */
+
 /*.$declare${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm_ctor} ...............................................*/
 void Clock_Alarm_ctor(void);

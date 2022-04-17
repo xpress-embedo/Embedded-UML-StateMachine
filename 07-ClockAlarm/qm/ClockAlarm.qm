@@ -16,6 +16,14 @@ NOTE: don't get confuse with static keyword, this static is in relevance to clas
    <operation name="GetCurrentTime" type="uint32_t" visibility="0x00" properties="0x01">
     <documentation>This returns the value of the current_time attribute of the class, which is static with reference to class Clock_Alarm.</documentation>
    </operation>
+   <operation name="UpdateCurrentTime" type="void" visibility="0x00" properties="0x01">
+    <code>Clock_Alarm_current_time++;
+/* If maximum value is reached, reset the current time */
+if( Clock_Alarm_current_time &gt;= MAX_TIME )
+{
+  Clock_Alarm_current_time = 0u;
+}</code>
+   </operation>
    <statechart properties="0x00">
     <initial target="../1/1">
      <initial_glyph conn="4,2,4,3,15,8">
@@ -91,6 +99,7 @@ $define${HSMs::Clock_Alarm}
 
 ISR( TIMER1_COMPA_vect )
 {
+  Clock_Alarm_UpdateCurrentTime();
 }
 </text>
    </file>
@@ -107,6 +116,8 @@ enum ClockAlarm_Signals
   TICK_SIG,
   MAX_SIG
 };
+
+#define MAX_TIME        (864000ul)        /* 24*3600*10 */
 
 $declare${HSMs::Clock_Alarm_ctor}
 

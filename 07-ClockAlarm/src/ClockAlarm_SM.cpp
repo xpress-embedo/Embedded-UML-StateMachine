@@ -39,6 +39,7 @@ typedef struct Clock_Alarm {
 
 /* public: */
 static uint32_t Clock_Alarm_GetCurrentTime(void);
+static void Clock_Alarm_UpdateCurrentTime(void);
 extern uint32_t Clock_Alarm_current_time;
 extern Clock_Alarm Clock_Alarm_obj;
 
@@ -71,6 +72,16 @@ uint32_t Clock_Alarm_current_time;
 Clock_Alarm Clock_Alarm_obj;
 /*.${HSMs::Clock_Alarm::GetCurrentTime} ....................................*/
 static uint32_t Clock_Alarm_GetCurrentTime(void) {
+}
+
+/*.${HSMs::Clock_Alarm::UpdateCurrentTime} .................................*/
+static void Clock_Alarm_UpdateCurrentTime(void) {
+    Clock_Alarm_current_time++;
+    /* If maximum value is reached, reset the current time */
+    if( Clock_Alarm_current_time >= MAX_TIME )
+    {
+      Clock_Alarm_current_time = 0u;
+    }
 }
 
 /*.${HSMs::Clock_Alarm::SM} ................................................*/
@@ -184,4 +195,5 @@ static QState Clock_Alarm_Alarm_Notify(Clock_Alarm * const me) {
 
 ISR( TIMER1_COMPA_vect )
 {
+  Clock_Alarm_UpdateCurrentTime();
 }
