@@ -55,6 +55,13 @@ static QState Clock_Alarm_Alarm_Notify(Clock_Alarm * const me);
 #error qpn version 6.9.0 or higher required
 #endif
 /*.$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+/*.$define${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*.${HSMs::Clock_Alarm_ctor} ...............................................*/
+void Clock_Alarm_ctor(void) {
+    QHsm_ctor( &Clock_Alarm_obj.super, Q_STATE_CAST(Clock_Alarm_Ticking));
+}
+/*.$enddef${HSMs::Clock_Alarm_ctor} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+
 /*.$define${HSMs::Clock_Alarm} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm} ....................................................*/
 Clock_Alarm Clock_Alarm_obj;
@@ -152,8 +159,8 @@ static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me) {
 static QState Clock_Alarm_Alarm_Notify(Clock_Alarm * const me) {
     QState status_;
     switch (Q_SIG(me)) {
-        /*.${HSMs::Clock_Alarm::SM::Alarm_Notify::TRIG1} */
-        case TRIG1_SIG: {
+        /*.${HSMs::Clock_Alarm::SM::Alarm_Notify::OK} */
+        case OK_SIG: {
             status_ = Q_TRAN_HIST(me->hist_Clock);
             break;
         }

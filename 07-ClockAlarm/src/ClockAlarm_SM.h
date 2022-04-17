@@ -29,4 +29,9 @@ enum ClockAlarm_Signals
   MAX_SIG
 };
 
+/*.$declare${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*.${HSMs::Clock_Alarm_ctor} ...............................................*/
+void Clock_Alarm_ctor(void);
+/*.$enddecl${HSMs::Clock_Alarm_ctor} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+
 #endif

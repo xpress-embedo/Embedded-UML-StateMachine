@@ -54,7 +54,7 @@
      <state_glyph node="8,3,74,47"/>
     </state>
     <state name="Alarm_Notify">
-     <tran trig="TRIG1" target="../../1" cpref="../../1/0">
+     <tran trig="OK" target="../../1" cpref="../../1/0">
       <tran_glyph conn="48,62,3,3,-44,-34,3">
        <action box="0,-2,10,2"/>
       </tran_glyph>
@@ -64,6 +64,10 @@
     <state_diagram size="93,69"/>
    </statechart>
   </class>
+  <operation name="Clock_Alarm_ctor" type="void" visibility="0x00" properties="0x00">
+   <documentation>Constructor for our class Clock_Alarm</documentation>
+   <code>QHsm_ctor( &amp;Clock_Alarm_obj.super, Q_STATE_CAST(Clock_Alarm_Ticking));</code>
+  </operation>
   <directory name="../src">
    <file name="ClockAlarm_SM.cpp">
     <text>#include &lt;Arduino.h&gt;
@@ -72,6 +76,8 @@
 #include &quot;ClockAlarm_SM.h&quot;
 
 $declare${HSMs::Clock_Alarm}
+
+$define${HSMs::Clock_Alarm_ctor}
 
 $define${HSMs::Clock_Alarm}
 </text>
@@ -89,6 +95,8 @@ enum ClockAlarm_Signals
   TICK_SIG,
   MAX_SIG
 };
+
+$declare${HSMs::Clock_Alarm_ctor}
 
 #endif</text>
    </file>
