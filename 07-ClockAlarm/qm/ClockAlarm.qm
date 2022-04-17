@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model version="5.1.1" links="0">
+ <framework name="qpn"/>
+ <package name="HSMs" stereotype="0x02">
+  <class name="Clock_Alarm" superclass="qpn::QHsm">
+   <attribute name="current_time" type="uint32_t" visibility="0x02" properties="0x00"/>
+   <attribute name="temp_time" type="uint32_t" visibility="0x02" properties="0x00"/>
+   <attribute name="alarm_time" type="uint32_t" visibility="0x02" properties="0x00"/>
+   <attribute name="alarm_status" type="uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="time_mode" type="uint8_t" visibility="0x02" properties="0x00"/>
+  </class>
+  <directory name="../src">
+   <file name="ClockAlarm_SM.cpp"/>
+   <file name="ClockAlarm_SM.h">
+    <text>#ifndef CLOCK_ALARM_H
+#define CLOCK_ALARM_H
+
+#endif</text>
+   </file>
+  </directory>
+ </package>
+</model>
