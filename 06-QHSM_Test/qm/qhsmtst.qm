@@ -291,7 +291,9 @@ QHsm_ctor(&amp;me-&gt;super, Q_STATE_CAST(&amp;QHsmTst_initial));</code>
  <directory name="../src">
   <!--${../src::QHSM_Test.cpp}-->
   <file name="QHSM_Test.cpp">
-   <text>$declare${HSMs::QHsmTst::SM}</text>
+   <text>$declare${HSMs::QHsmTst}
+
+$define${HSMs::QHsmTst}</text>
   </file>
   <!--${../src::QHSM_Test.h}-->
   <file name="QHSM_Test.h"/>
