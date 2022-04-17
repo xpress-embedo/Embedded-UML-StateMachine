@@ -44,17 +44,21 @@ static QState QHsmTst_s2(QHsmTst * const me);
 static QState QHsmTst_s21(QHsmTst * const me);
 static QState QHsmTst_s211(QHsmTst * const me);
 /*.$enddecl${HSMs::QHsmTst} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+
 /*.$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*. Check for the minimum required QP version */
 #if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE^4294967295U) % 0x3E8U))
 #error qpn version 6.9.0 or higher required
 #endif
 /*.$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+/*.$define${HSMs::super_QHsmTst} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*.${HSMs::super_QHsmTst} ..................................................*/
+QHsm *const super_QHsmTst = &QHsmTst_obj.super;
+/*.$enddef${HSMs::super_QHsmTst} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 /*.$define${HSMs::QHsmTst_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::QHsmTst_ctor} ...................................................*/
 void QHsmTst_ctor(void) {
-    QHsmTst *me = &QHsmTst_obj;
-    QHsm_ctor(&me->super, Q_STATE_CAST(&QHsmTst_initial));
+    QHsm_ctor(super_QHsmTst,Q_STATE_CAST(&QHsmTst_initial));
 }
 /*.$enddef${HSMs::QHsmTst_ctor} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 /*.$define${HSMs::QHsmTst} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/

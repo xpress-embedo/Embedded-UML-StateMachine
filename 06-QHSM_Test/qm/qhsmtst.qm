@@ -10,6 +10,8 @@
    <documentation>Test active object</documentation>
    <!--${HSMs::QHsmTst::foo}-->
    <attribute name="foo" type="uint8_t" visibility="0x02" properties="0x00"/>
+   <!--${HSMs::QHsmTst::obj}-->
+   <attribute name="obj" type="QHsmTst" visibility="0x02" properties="0x01"/>
    <!--${HSMs::QHsmTst::SM}-->
    <statechart properties="0x01">
     <!--${HSMs::QHsmTst::SM::initial}-->
@@ -281,10 +283,13 @@ BSP_display(&quot;s2-I;&quot;);</action>
     <state_diagram size="97,64"/>
    </statechart>
   </class>
+  <!--${HSMs::super_QHsmTst}-->
+  <attribute name="super_QHsmTst" type="QHsm *const" visibility="0x00" properties="0x00">
+   <code>= &amp;QHsmTst_obj.super;</code>
+  </attribute>
   <!--${HSMs::QHsmTst_ctor}-->
   <operation name="QHsmTst_ctor" type="void" visibility="0x00" properties="0x00">
-   <code>QHsmTst *me = &amp;l_hsmtst;
-QHsm_ctor(&amp;me-&gt;super, Q_STATE_CAST(&amp;QHsmTst_initial));</code>
+   <code>QHsm_ctor(super_QHsmTst,Q_STATE_CAST(&amp;QHsmTst_initial));</code>
   </operation>
  </package>
  <!--${../src}-->
@@ -298,6 +303,8 @@ QHsm_ctor(&amp;me-&gt;super, Q_STATE_CAST(&amp;QHsmTst_initial));</code>
 
 $declare${HSMs::QHsmTst}
 
+$define${HSMs::super_QHsmTst}
+$define${HSMs::QHsmTst_ctor}
 $define${HSMs::QHsmTst}</text>
   </file>
   <!--${../src::QHSM_Test.h}-->
@@ -317,8 +324,12 @@ enum QHSM_Test_Signals
   H_SIG,
   I_SIG,
   TERMINATE_SIG,
+  IGNORE_SIG,
   MAX_SIG
 };
+
+$declare${HSMs::super_QHsmTst}
+$declare${HSMs::QHsmTst_ctor}
 
 #endif</text>
   </file>
