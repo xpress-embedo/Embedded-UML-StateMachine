@@ -8,6 +8,7 @@
    <attribute name="alarm_time" type="uint32_t" visibility="0x02" properties="0x00"/>
    <attribute name="alarm_status" type="uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="time_mode" type="uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="obj" type="Clock_Alarm" visibility="0x02" properties="0x01"/>
    <statechart properties="0x00">
     <initial target="../1/1">
      <initial_glyph conn="4,2,4,3,15,8">
@@ -71,6 +72,8 @@
 #include &quot;ClockAlarm_SM.h&quot;
 
 $declare${HSMs::Clock_Alarm}
+
+$define${HSMs::Clock_Alarm}
 </text>
    </file>
    <file name="ClockAlarm_SM.h">

@@ -37,6 +37,7 @@ typedef struct Clock_Alarm {
 /* private state histories */
     QStateHandler hist_Clock;
 } Clock_Alarm;
+extern Clock_Alarm Clock_Alarm_obj;
 
 /* protected: */
 static QState Clock_Alarm_initial(Clock_Alarm * const me);
@@ -47,3 +48,120 @@ static QState Clock_Alarm_Clock_Setting(Clock_Alarm * const me);
 static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me);
 static QState Clock_Alarm_Alarm_Notify(Clock_Alarm * const me);
 /*.$enddecl${HSMs::Clock_Alarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+
+/*.$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*. Check for the minimum required QP version */
+#if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE^4294967295U) % 0x3E8U))
+#error qpn version 6.9.0 or higher required
+#endif
+/*.$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+/*.$define${HSMs::Clock_Alarm} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*.${HSMs::Clock_Alarm} ....................................................*/
+Clock_Alarm Clock_Alarm_obj;
+/*.${HSMs::Clock_Alarm::SM} ................................................*/
+static QState Clock_Alarm_initial(Clock_Alarm * const me) {
+    /*.${HSMs::Clock_Alarm::SM::initial} */
+    /* state history attributes */
+    /* state history attributes */
+    me->hist_Clock = Q_STATE_CAST(&Clock_Alarm_Ticking);
+    return Q_TRAN(&Clock_Alarm_Ticking);
+}
+/*.${HSMs::Clock_Alarm::SM::Clock} .........................................*/
+static QState Clock_Alarm_Clock(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock} */
+        case Q_EXIT_SIG: {
+            /* save deep history */
+            me->hist_Clock = QHsm_state(me);
+            status_ = Q_HANDLED();
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&QHsm_top);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Ticking} ................................*/
+static QState Clock_Alarm_Ticking(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Ticking::SET} */
+        case SET_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Clock_Setting);
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Ticking::OK} */
+        case OK_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Alarm_Setting);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Clock);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings} ...............................*/
+static QState Clock_Alarm_Settings(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::OK} */
+        case OK_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Ticking);
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::ABRT} */
+        case ABRT_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Ticking);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Clock);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Clock_Setting} ................*/
+static QState Clock_Alarm_Clock_Setting(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Settings);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting} ................*/
+static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Settings);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Alarm_Notify} ..................................*/
+static QState Clock_Alarm_Alarm_Notify(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Alarm_Notify::TRIG1} */
+        case TRIG1_SIG: {
+            status_ = Q_TRAN_HIST(me->hist_Clock);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&QHsm_top);
+            break;
+        }
+    }
+    return status_;
+}
+/*.$enddef${HSMs::Clock_Alarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
