@@ -66,7 +66,7 @@ static QState Clock_Alarm_Ticking(Clock_Alarm * const me);
 static QState Clock_Alarm_Settings(Clock_Alarm * const me);
 static QState Clock_Alarm_Clock_Setting(Clock_Alarm * const me);
 static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me);
-static QState Clock_Alarm_Alarm_Notify(Clock_Alarm * const me);
+static QState Clock_Alarm_Notify(Clock_Alarm * const me);
 /*.$enddecl${HSMs::Clock_Alarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 
 /* Helper Function Prototypes */
@@ -85,10 +85,13 @@ uint32_t Convert24H_To_12H( uint32_t time24h );
 /*.$define${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm_ctor} ...............................................*/
 void Clock_Alarm_ctor(void) {
-    QHsm_ctor( &Clock_Alarm_obj.super, Q_STATE_CAST(Clock_Alarm_Ticking));
+    QHsm_ctor( &Clock_Alarm_obj.super, Q_STATE_CAST(&Clock_Alarm_Ticking));
 }
 /*.$enddef${HSMs::Clock_Alarm_ctor} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
-
+/*.$define${HSMs::super_ClockAlarm} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*.${HSMs::super_ClockAlarm} ...............................................*/
+QHsm *const super_ClockAlarm = &Clock_Alarm_obj.super;
+/*.$enddef${HSMs::super_ClockAlarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 /*.$define${HSMs::Clock_Alarm} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm} ....................................................*/
 uint32_t Clock_Alarm_current_time;
@@ -135,10 +138,12 @@ static void Clock_Alarm_DisplayCurrentTime(Clock_Alarm * const me, uint8_t row, 
     String time_as_string;
     uint32_t time_;
 
-    /* convert to number of seconds */
-    uint32_t time24h = Clock_Alarm_GetCurrentTime()/10;
+    /* get the current time */
+    uint32_t time24h = Clock_Alarm_GetCurrentTime();
     /* extract sub-second to append later */
     uint8_t ss = time24h % 10U;
+    /* convert to number of seconds */
+    time24h = Clock_Alarm_GetCurrentTime()/10u;
 
     if( me->time_mode == TIME_MODE_24H )
     {
@@ -220,6 +225,12 @@ static QState Clock_Alarm_Ticking(Clock_Alarm * const me) {
             status_ = Q_TRAN(&Clock_Alarm_Alarm_Setting);
             break;
         }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Ticking::TICK} */
+        case TICK_SIG: {
+            Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW, TICKING_CURR_TIME_COL );
+            status_ = Q_HANDLED();
+            break;
+        }
         default: {
             status_ = Q_SUPER(&Clock_Alarm_Clock);
             break;
@@ -270,11 +281,11 @@ static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me) {
     }
     return status_;
 }
-/*.${HSMs::Clock_Alarm::SM::Alarm_Notify} ..................................*/
-static QState Clock_Alarm_Alarm_Notify(Clock_Alarm * const me) {
+/*.${HSMs::Clock_Alarm::SM::Notify} ........................................*/
+static QState Clock_Alarm_Notify(Clock_Alarm * const me) {
     QState status_;
     switch (Q_SIG(me)) {
-        /*.${HSMs::Clock_Alarm::SM::Alarm_Notify::OK} */
+        /*.${HSMs::Clock_Alarm::SM::Notify::OK} */
         case OK_SIG: {
             status_ = Q_TRAN_HIST(me->hist_Clock);
             break;

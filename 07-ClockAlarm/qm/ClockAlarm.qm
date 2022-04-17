@@ -51,10 +51,12 @@ interrupts();</code>
     <code>String time_as_string;
 uint32_t time_;
 
-/* convert to number of seconds */
-uint32_t time24h = Clock_Alarm_GetCurrentTime()/10;
+/* get the current time */
+uint32_t time24h = Clock_Alarm_GetCurrentTime();
 /* extract sub-second to append later */
 uint8_t ss = time24h % 10U;
+/* convert to number of seconds */
+time24h = Clock_Alarm_GetCurrentTime()/10u;
 
 if( me-&gt;time_mode == TIME_MODE_24H )
 {
@@ -111,6 +113,12 @@ me-&gt;alarm_status = ALARM_OFF;</action>
         <action box="0,-2,10,2"/>
        </tran_glyph>
       </tran>
+      <tran trig="TICK">
+       <action>Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW, TICKING_CURR_TIME_COL );</action>
+       <tran_glyph conn="12,22,3,-1,12">
+        <action box="0,-2,10,2"/>
+       </tran_glyph>
+      </tran>
       <state_glyph node="12,14,18,10">
        <entry box="1,2,6,2"/>
       </state_glyph>
@@ -136,7 +144,7 @@ me-&gt;alarm_status = ALARM_OFF;</action>
      </state>
      <state_glyph node="8,3,74,47"/>
     </state>
-    <state name="Alarm_Notify">
+    <state name="Notify">
      <tran trig="OK" target="../../1" cpref="../../1/0">
       <tran_glyph conn="48,62,3,3,-44,-34,3">
        <action box="0,-2,10,2"/>
@@ -147,9 +155,12 @@ me-&gt;alarm_status = ALARM_OFF;</action>
     <state_diagram size="93,69"/>
    </statechart>
   </class>
+  <attribute name="super_ClockAlarm" type="QHsm *const" visibility="0x00" properties="0x00">
+   <code>= &amp;Clock_Alarm_obj.super;</code>
+  </attribute>
   <operation name="Clock_Alarm_ctor" type="void" visibility="0x00" properties="0x00">
    <documentation>Constructor for our class Clock_Alarm</documentation>
-   <code>QHsm_ctor( &amp;Clock_Alarm_obj.super, Q_STATE_CAST(Clock_Alarm_Ticking));</code>
+   <code>QHsm_ctor( &amp;Clock_Alarm_obj.super, Q_STATE_CAST(&amp;Clock_Alarm_Ticking));</code>
   </operation>
   <directory name="../src">
    <file name="ClockAlarm_SM.cpp">
@@ -175,7 +186,7 @@ uint32_t Convert12H_To_24H( uint32_t time12h, time_format_t am_pm );
 uint32_t Convert24H_To_12H( uint32_t time24h );
 
 $define${HSMs::Clock_Alarm_ctor}
-
+$define${HSMs::super_ClockAlarm}
 $define${HSMs::Clock_Alarm}
 
 /*
@@ -333,6 +344,7 @@ typedef enum time_format
 #define TICKING_CURR_TIME_COL   (3u)
 
 $declare${HSMs::Clock_Alarm_ctor}
+$declare${HSMs::super_ClockAlarm}
 
 #endif</text>
    </file>

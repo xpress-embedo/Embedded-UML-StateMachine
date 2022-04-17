@@ -59,5 +59,8 @@ typedef enum time_format
 /*.${HSMs::Clock_Alarm_ctor} ...............................................*/
 void Clock_Alarm_ctor(void);
 /*.$enddecl${HSMs::Clock_Alarm_ctor} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+/*.$declare${HSMs::super_ClockAlarm} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+extern QHsm *const super_ClockAlarm;
+/*.$enddecl${HSMs::super_ClockAlarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 
 #endif
