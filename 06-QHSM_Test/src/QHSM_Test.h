@@ -16,3 +16,22 @@
 * for more details.
 */
 /*.$endhead${../src::QHSM_Test.h} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+#ifndef QHSM_TEST_H
+#define QHSM_TEST_H
+
+enum QHSM_Test_Signals
+{
+  A_SIG = Q_USER_SIG,    /* Q_USER_SIG marks the beginning of User Signals */
+  B_SIG,
+  C_SIG,
+  D_SIG,
+  E_SIG,
+  F_SIG,
+  G_SIG,
+  H_SIG,
+  I_SIG,
+  TERMINATE_SIG,
+  MAX_SIG
+};
+
+#endif

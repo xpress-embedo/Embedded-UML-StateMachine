@@ -291,11 +291,36 @@ QHsm_ctor(&amp;me-&gt;super, Q_STATE_CAST(&amp;QHsmTst_initial));</code>
  <directory name="../src">
   <!--${../src::QHSM_Test.cpp}-->
   <file name="QHSM_Test.cpp">
-   <text>$declare${HSMs::QHsmTst}
+   <text>#include &lt;Arduino.h&gt;
+#include &quot;bsp.h&quot;
+#include &quot;qpn.h&quot;
+#include &quot;QHSM_Test.h&quot;
+
+$declare${HSMs::QHsmTst}
 
 $define${HSMs::QHsmTst}</text>
   </file>
   <!--${../src::QHSM_Test.h}-->
-  <file name="QHSM_Test.h"/>
+  <file name="QHSM_Test.h">
+   <text>#ifndef QHSM_TEST_H
+#define QHSM_TEST_H
+
+enum QHSM_Test_Signals
+{
+  A_SIG = Q_USER_SIG,    /* Q_USER_SIG marks the beginning of User Signals */
+  B_SIG,
+  C_SIG,
+  D_SIG,
+  E_SIG,
+  F_SIG,
+  G_SIG,
+  H_SIG,
+  I_SIG,
+  TERMINATE_SIG,
+  MAX_SIG
+};
+
+#endif</text>
+  </file>
  </directory>
 </model>

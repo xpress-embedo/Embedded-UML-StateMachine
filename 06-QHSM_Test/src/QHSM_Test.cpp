@@ -16,6 +16,11 @@
 * for more details.
 */
 /*.$endhead${../src::QHSM_Test.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+#include <Arduino.h>
+#include "bsp.h"
+#include "qpn.h"
+#include "QHSM_Test.h"
+
 /*.$declare${HSMs::QHsmTst} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::QHsmTst} ........................................................*/
 typedef struct QHsmTst {
