@@ -2,10 +2,23 @@
 #include "qpn.h"
 #include "QHSM_Test.h"
 
-void setup() {
-  // put your setup code here, to run once:
+Q_NORETURN Q_onAssert	(	char_t const *const 	module, int_t const 	location );
+
+void setup()
+{
+  QHsmTst_ctor();
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+void loop() 
+{
+}
+
+
+Q_NORETURN Q_onAssert	(	char_t const *const 	module, int_t const 	location )
+{
+  Serial.println("Assertion Failure!!");
+  Serial.println((String)module);
+  Serial.println(location);
+  /* As per documentation it's not a good idea to do like this */
+  while(1);
 }

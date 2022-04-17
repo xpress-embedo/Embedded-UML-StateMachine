@@ -34,4 +34,9 @@ enum QHSM_Test_Signals
   MAX_SIG
 };
 
+/*.$declare${HSMs::QHsmTst_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*.${HSMs::QHsmTst_ctor} ...................................................*/
+void QHsmTst_ctor(void);
+/*.$enddecl${HSMs::QHsmTst_ctor} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+
 #endif

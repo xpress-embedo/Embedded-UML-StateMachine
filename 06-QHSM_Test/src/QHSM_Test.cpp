@@ -33,6 +33,7 @@ typedef struct QHsmTst {
 /* private state histories */
     QStateHandler hist_s1;
 } QHsmTst;
+extern QHsmTst QHsmTst_obj;
 
 /* protected: */
 static QState QHsmTst_initial(QHsmTst * const me);
@@ -43,15 +44,22 @@ static QState QHsmTst_s2(QHsmTst * const me);
 static QState QHsmTst_s21(QHsmTst * const me);
 static QState QHsmTst_s211(QHsmTst * const me);
 /*.$enddecl${HSMs::QHsmTst} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
-
 /*.$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*. Check for the minimum required QP version */
 #if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE^4294967295U) % 0x3E8U))
 #error qpn version 6.9.0 or higher required
 #endif
 /*.$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+/*.$define${HSMs::QHsmTst_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*.${HSMs::QHsmTst_ctor} ...................................................*/
+void QHsmTst_ctor(void) {
+    QHsmTst *me = &QHsmTst_obj;
+    QHsm_ctor(&me->super, Q_STATE_CAST(&QHsmTst_initial));
+}
+/*.$enddef${HSMs::QHsmTst_ctor} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 /*.$define${HSMs::QHsmTst} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::QHsmTst} ........................................................*/
+QHsmTst QHsmTst_obj;
 /*.${HSMs::QHsmTst::SM} ....................................................*/
 static QState QHsmTst_initial(QHsmTst * const me) {
     /*.${HSMs::QHsmTst::SM::initial} */
