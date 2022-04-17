@@ -6,3 +6,6 @@
 Project*Backups/
 **/Projects Pro/
 *.workspace
+
+# Data/Resources Folder
+/Resources/
