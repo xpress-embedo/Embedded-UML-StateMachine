@@ -83,7 +83,7 @@ if( me-&gt;time_mode == TIME_MODE_12H )
 /* update display */
 display_write(time_as_string, row, col);</code>
    </operation>
-   <statechart properties="0x00">
+   <statechart properties="0x01">
     <initial target="../1/1">
      <action>/* Set the current time at start-up */
 Clock_Alarm_SetCurrentTime( INITIAL_CURRENT_TIME );
@@ -160,7 +160,7 @@ me-&gt;alarm_status = ALARM_OFF;</action>
   </attribute>
   <operation name="Clock_Alarm_ctor" type="void" visibility="0x00" properties="0x00">
    <documentation>Constructor for our class Clock_Alarm</documentation>
-   <code>QHsm_ctor( &amp;Clock_Alarm_obj.super, Q_STATE_CAST(&amp;Clock_Alarm_Ticking));</code>
+   <code>QHsm_ctor( &amp;Clock_Alarm_obj.super, Q_STATE_CAST(&amp;Clock_Alarm_initial));</code>
   </operation>
   <directory name="../src">
    <file name="ClockAlarm_SM.cpp">

@@ -85,7 +85,7 @@ uint32_t Convert24H_To_12H( uint32_t time24h );
 /*.$define${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm_ctor} ...............................................*/
 void Clock_Alarm_ctor(void) {
-    QHsm_ctor( &Clock_Alarm_obj.super, Q_STATE_CAST(&Clock_Alarm_Ticking));
+    QHsm_ctor( &Clock_Alarm_obj.super, Q_STATE_CAST(&Clock_Alarm_initial));
 }
 /*.$enddef${HSMs::Clock_Alarm_ctor} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 /*.$define${HSMs::super_ClockAlarm} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
