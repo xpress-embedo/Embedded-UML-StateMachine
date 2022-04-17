@@ -29,7 +29,21 @@ enum ClockAlarm_Signals
   MAX_SIG
 };
 
-#define MAX_TIME        (864000ul)        /* 24*3600*10 */
+enum time_mode
+{
+  TIME_MODE_24H = 0,
+  TIME_MODE_12H,
+};
+
+enum alarm_status
+{
+  ALARM_OFF = 0,
+  ALARM_ON
+};
+
+#define INITIAL_CURRENT_TIME    (((10ul*3600ul) + (10ul*60ul) + 10ul) * 10ul)    /* 10 hours 10 minutes 10 seconds */
+#define INITIAL_ALARM_TIME      (8ul*3600ul)                                     /* 8 hours */
+#define MAX_TIME                (864000ul)                                       /* 24*3600*10 */
 
 /*.$declare${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm_ctor} ...............................................*/

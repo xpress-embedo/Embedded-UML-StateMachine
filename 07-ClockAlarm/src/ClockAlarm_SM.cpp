@@ -40,6 +40,7 @@ typedef struct Clock_Alarm {
 /* public: */
 static uint32_t Clock_Alarm_GetCurrentTime(void);
 static void Clock_Alarm_UpdateCurrentTime(void);
+static void Clock_Alarm_SetCurrentTime(uint32_t new_current_time);
 extern uint32_t Clock_Alarm_current_time;
 extern Clock_Alarm Clock_Alarm_obj;
 
@@ -76,6 +77,8 @@ static uint32_t Clock_Alarm_GetCurrentTime(void) {
 
 /*.${HSMs::Clock_Alarm::UpdateCurrentTime} .................................*/
 static void Clock_Alarm_UpdateCurrentTime(void) {
+    /* this function is called from ISR hence we don't need to disable and enable
+    interrupts to update this attribute of the class */
     Clock_Alarm_current_time++;
     /* If maximum value is reached, reset the current time */
     if( Clock_Alarm_current_time >= MAX_TIME )
@@ -84,9 +87,26 @@ static void Clock_Alarm_UpdateCurrentTime(void) {
     }
 }
 
+/*.${HSMs::Clock_Alarm::SetCurrentTime} ....................................*/
+static void Clock_Alarm_SetCurrentTime(uint32_t new_current_time) {
+    /* current_time is also getting updated in interrupts, hence we can't update
+    it directly, it should be an atomic update */
+    noInterrupts();
+    Clock_Alarm_current_time = new_current_time;
+    interrupts();
+}
+
 /*.${HSMs::Clock_Alarm::SM} ................................................*/
 static QState Clock_Alarm_initial(Clock_Alarm * const me) {
     /*.${HSMs::Clock_Alarm::SM::initial} */
+    /* Set the current time at start-up */
+    Clock_Alarm_SetCurrentTime( INITIAL_CURRENT_TIME );
+    /* Also set the alarm time at start-up */
+    me->alarm_time = INITIAL_ALARM_TIME;
+    /* Also set the time-mode */
+    me->time_mode = TIME_MODE_12H;
+    /* Also set the alarm status to off at start-up */
+    me->alarm_status = ALARM_OFF;
     /* state history attributes */
     /* state history attributes */
     me->hist_Clock = Q_STATE_CAST(&Clock_Alarm_Ticking);

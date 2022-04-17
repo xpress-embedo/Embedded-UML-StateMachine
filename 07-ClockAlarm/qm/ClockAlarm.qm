@@ -17,15 +17,33 @@ NOTE: don't get confuse with static keyword, this static is in relevance to clas
     <documentation>This returns the value of the current_time attribute of the class, which is static with reference to class Clock_Alarm.</documentation>
    </operation>
    <operation name="UpdateCurrentTime" type="void" visibility="0x00" properties="0x01">
-    <code>Clock_Alarm_current_time++;
+    <code>/* this function is called from ISR hence we don't need to disable and enable
+interrupts to update this attribute of the class */
+Clock_Alarm_current_time++;
 /* If maximum value is reached, reset the current time */
 if( Clock_Alarm_current_time &gt;= MAX_TIME )
 {
   Clock_Alarm_current_time = 0u;
 }</code>
    </operation>
+   <operation name="SetCurrentTime" type="void" visibility="0x00" properties="0x01">
+    <parameter name="new_current_time" type="uint32_t"/>
+    <code>/* current_time is also getting updated in interrupts, hence we can't update
+it directly, it should be an atomic update */
+noInterrupts();
+Clock_Alarm_current_time = new_current_time;
+interrupts();</code>
+   </operation>
    <statechart properties="0x00">
     <initial target="../1/1">
+     <action>/* Set the current time at start-up */
+Clock_Alarm_SetCurrentTime( INITIAL_CURRENT_TIME );
+/* Also set the alarm time at start-up */
+me-&gt;alarm_time = INITIAL_ALARM_TIME;
+/* Also set the time-mode */
+me-&gt;time_mode = TIME_MODE_12H;
+/* Also set the alarm status to off at start-up */
+me-&gt;alarm_status = ALARM_OFF;</action>
      <initial_glyph conn="4,2,4,3,15,8">
       <action box="0,-2,10,2"/>
      </initial_glyph>
@@ -117,7 +135,21 @@ enum ClockAlarm_Signals
   MAX_SIG
 };
 
-#define MAX_TIME        (864000ul)        /* 24*3600*10 */
+enum time_mode
+{
+  TIME_MODE_24H = 0,
+  TIME_MODE_12H,
+};
+
+enum alarm_status
+{
+  ALARM_OFF = 0,
+  ALARM_ON
+};
+
+#define INITIAL_CURRENT_TIME    (((10ul*3600ul) + (10ul*60ul) + 10ul) * 10ul)    /* 10 hours 10 minutes 10 seconds */
+#define INITIAL_ALARM_TIME      (8ul*3600ul)                                     /* 8 hours */
+#define MAX_TIME                (864000ul)                                       /* 24*3600*10 */
 
 $declare${HSMs::Clock_Alarm_ctor}
 
