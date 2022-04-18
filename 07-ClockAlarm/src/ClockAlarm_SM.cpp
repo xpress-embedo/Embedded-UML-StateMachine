@@ -317,12 +317,26 @@ static QState Clock_Alarm_Settings(Clock_Alarm * const me) {
         case Q_EXIT_SIG: {
             /* clear the display, when setting state is exited */
             display_clear();
+            /* turn of the display blinking */
+            display_cursor_off_blinkoff();
             status_ = Q_HANDLED();
             break;
         }
         /*.${HSMs::Clock_Alarm::SM::Clock::Settings::OK} */
         case OK_SIG: {
-            display_cursor_off_blinkoff();
+            if( me->temp_format != FORMAT_24H )
+            {
+              me->temp_time = Convert12H_To_24H( me->temp_time, (time_format_t)(me->temp_format));
+              me->time_mode = TIME_MODE_12H;
+            }
+            else
+            {
+              me->time_mode = TIME_MODE_24H;
+            }
+
+            me->temp_time *= 10ul;
+            Clock_Alarm_SetCurrentTime( me->temp_time);
+
             status_ = Q_TRAN(&Clock_Alarm_Ticking);
             break;
         }

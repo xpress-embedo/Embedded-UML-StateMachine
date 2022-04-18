@@ -174,9 +174,23 @@ else
      </state>
      <state name="Settings">
       <exit>/* clear the display, when setting state is exited */
-display_clear();</exit>
+display_clear();
+/* turn of the display blinking */
+display_cursor_off_blinkoff();</exit>
       <tran trig="OK" target="../../1">
-       <action>display_cursor_off_blinkoff();</action>
+       <action>if( me-&gt;temp_format != FORMAT_24H )
+{
+  me-&gt;temp_time = Convert12H_To_24H( me-&gt;temp_time, (time_format_t)(me-&gt;temp_format));
+  me-&gt;time_mode = TIME_MODE_12H;
+}
+else
+{
+  me-&gt;time_mode = TIME_MODE_24H;
+}
+
+me-&gt;temp_time *= 10ul;
+Clock_Alarm_SetCurrentTime( me-&gt;temp_time);
+</action>
        <tran_glyph conn="38,88,3,2,-16,-64">
         <action box="0,-2,10,2"/>
        </tran_glyph>
