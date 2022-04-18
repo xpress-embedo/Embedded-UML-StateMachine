@@ -43,6 +43,7 @@ typedef struct Clock_Alarm {
     uint8_t temp_format;
     uint8_t temp_digit;
     uint8_t timeout;
+    uint16_t alarm_timeout;
 
 /* private state histories */
     QStateHandler hist_Clock;
@@ -93,6 +94,8 @@ static QState Clock_Alarm_AS_Error_Off(Clock_Alarm * const me);
 static QState Clock_Alarm_AS_Hour_D1(Clock_Alarm * const me);
 static QState Clock_Alarm_Alarm_On_Off(Clock_Alarm * const me);
 static QState Clock_Alarm_Notify(Clock_Alarm * const me);
+static QState Clock_Alarm_Notify_Msg_On(Clock_Alarm * const me);
+static QState Clock_Alarm_Notify_Msg_Off(Clock_Alarm * const me);
 /*.$enddecl${HSMs::Clock_Alarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 
 /* Helper Function Prototypes */
@@ -252,6 +255,17 @@ static QState Clock_Alarm_Clock(Clock_Alarm * const me) {
             /* save deep history */
             me->hist_Clock = QHsm_state(me);
             status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::ALARM} */
+        case ALARM_SIG: {
+            /*.${HSMs::Clock_Alarm::SM::Clock::ALARM::[AlarmIsTriggered?]} */
+            if (( me->alarm_status == ALARM_ON && Clock_Alarm_GetCurrentTime()/10 == me->alarm_time )) {
+                status_ = Q_TRAN(&Clock_Alarm_Notify);
+            }
+            else {
+                status_ = Q_UNHANDLED();
+            }
             break;
         }
         default: {
@@ -841,6 +855,12 @@ static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me) {
         }
         /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::OK} */
         case OK_SIG: {
+            me->alarm_status = me->temp_digit;
+            if(me->temp_format != FORMAT_24H)
+            {
+              me->temp_time = Convert12H_To_24H( me->temp_time, (time_format_t)me->temp_format);
+            }
+            me->alarm_time = me->temp_time;
             /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::OK::[0]} */
             if (0) {
                 status_ = Q_HANDLED();
@@ -1025,6 +1045,7 @@ static QState Clock_Alarm_AS_Format(Clock_Alarm * const me) {
             display_write( msg, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
             /* set the cursor again to orignal position */
             display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
+            Serial.println("AS Format SET Signal");
             status_ = Q_HANDLED();
             break;
         }
@@ -1317,6 +1338,15 @@ static QState Clock_Alarm_AS_Hour_D1(Clock_Alarm * const me) {
 static QState Clock_Alarm_Alarm_On_Off(Clock_Alarm * const me) {
     QState status_;
     switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::Alarm_On_Off} */
+        case Q_ENTRY_SIG: {
+            me->temp_digit = 0u;
+            display_erase_block( ALARM_SETTING_STATUS_ROW, 0, 15);
+            display_write( "ALARM OFF", ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+            display_set_cursor(ALARM_SETTING_STATUS_ROW,ALARM_SETTING_STATUS_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
         /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::Alarm_On_Off::SET} */
         case SET_SIG: {
             if( me->temp_digit )
@@ -1344,13 +1374,103 @@ static QState Clock_Alarm_Alarm_On_Off(Clock_Alarm * const me) {
 static QState Clock_Alarm_Notify(Clock_Alarm * const me) {
     QState status_;
     switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Notify} */
+        case Q_ENTRY_SIG: {
+            me->timeout = 0;
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Notify} */
+        case Q_EXIT_SIG: {
+            display_clear();
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Notify::initial} */
+        case Q_INIT_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Notify_Msg_On);
+            break;
+        }
         /*.${HSMs::Clock_Alarm::SM::Notify::OK} */
         case OK_SIG: {
             status_ = Q_TRAN_HIST(me->hist_Clock);
             break;
         }
+        /*.${HSMs::Clock_Alarm::SM::Notify::TICK} */
+        case TICK_SIG: {
+            Clock_Alarm_DisplayCurrentTime( me, ALARM_SETTING_CURR_TIME_ROW, ALARM_SETTING_CURR_TIME_COL);
+            /*.${HSMs::Clock_Alarm::SM::Notify::TICK::[AlarmTimeout?]} */
+            if (++me->alarm_timeout == 200u) {
+                me->alarm_timeout = 0u;
+                status_ = Q_TRAN(&Clock_Alarm_Ticking);
+            }
+            else {
+                status_ = Q_UNHANDLED();
+            }
+            break;
+        }
         default: {
             status_ = Q_SUPER(&QHsm_top);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Notify::Notify_Msg_On} .........................*/
+static QState Clock_Alarm_Notify_Msg_On(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Notify::Notify_Msg_On} */
+        case Q_ENTRY_SIG: {
+            display_write( "*ALARM*", ALARM_NOTIFY_MSG_ROW, ALARM_NOTIFY_MSG_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Notify::Notify_Msg_On::TICK} */
+        case TICK_SIG: {
+            me->timeout++;
+            /*.${HSMs::Clock_Alarm::SM::Notify::Notify_Msg_On::TICK::[Timeout?]} */
+            if (me->timeout == 10) {
+                me->timeout = 0;
+                status_ = Q_TRAN(&Clock_Alarm_Notify_Msg_Off);
+            }
+            else {
+                status_ = Q_UNHANDLED();
+            }
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Notify);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Notify::Notify_Msg_Off} ........................*/
+static QState Clock_Alarm_Notify_Msg_Off(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Notify::Notify_Msg_Off} */
+        case Q_ENTRY_SIG: {
+            display_erase_block( ALARM_NOTIFY_MSG_ROW, ALARM_NOTIFY_MSG_COL, 10);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Notify::Notify_Msg_Off::TICK} */
+        case TICK_SIG: {
+            me->timeout++;
+            /*.${HSMs::Clock_Alarm::SM::Notify::Notify_Msg_Off::TICK::[Timeout?]} */
+            if (me->timeout == 10) {
+                me->timeout = 0;
+                status_ = Q_TRAN(&Clock_Alarm_Notify_Msg_On);
+            }
+            else {
+                status_ = Q_UNHANDLED();
+            }
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Notify);
             break;
         }
     }

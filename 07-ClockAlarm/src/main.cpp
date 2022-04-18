@@ -42,6 +42,7 @@ void setup()
 void loop() 
 {
   static uint32_t tick_time = millis();
+  static uint32_t alarm_check_time = millis();
   uint8_t button1, button2, button_pad_value;
 
   /* Send tick event every 50ms */
@@ -49,6 +50,14 @@ void loop()
   {
     tick_time = millis();
     Q_SIG( super_ClockAlarm) = TICK_SIG;
+    QHSM_DISPATCH( super_ClockAlarm );
+  }
+
+  /* Send Alarm Event every 500 ms */
+  if( millis() - alarm_check_time >= 500u )
+  {
+    alarm_check_time = millis();
+    Q_SIG( super_ClockAlarm ) = ALARM_SIG;
     QHSM_DISPATCH( super_ClockAlarm );
   }
 

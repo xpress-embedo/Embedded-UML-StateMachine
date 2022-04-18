@@ -16,6 +16,7 @@ NOTE: don't get confuse with static keyword, this static is in relevance to clas
    <attribute name="temp_format" type="uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="temp_digit" type="uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="timeout" type="uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="alarm_timeout" type="uint16_t" visibility="0x02" properties="0x00"/>
    <operation name="GetCurrentTime" type="uint32_t" visibility="0x00" properties="0x01">
     <documentation>This returns the value of the current_time attribute of the class, which is static with reference to class Clock_Alarm.</documentation>
     <code>uint32_t temp = 0u;
@@ -111,7 +112,7 @@ if( me-&gt;temp_format != FORMAT_24H )
 display_write( time_as_string, row, col);</code>
    </operation>
    <statechart properties="0x01">
-    <initial target="../1/1">
+    <initial target="../1/2">
      <action>/* Set the current time at start-up */
 Clock_Alarm_SetCurrentTime( INITIAL_CURRENT_TIME );
 /* Also set the alarm time at start-up */
@@ -125,14 +126,25 @@ me-&gt;alarm_status = ALARM_OFF;</action>
      </initial_glyph>
     </initial>
     <state name="Clock">
-     <history type="deep" target="../1">
+     <history type="deep" target="../2">
       <history_glyph conn="8,28,3,2,6,-4"/>
      </history>
+     <tran trig="ALARM">
+      <choice target="../../../2">
+       <guard brief="Alarm Is Triggered?">( me-&gt;alarm_status == ALARM_ON &amp;&amp; Clock_Alarm_GetCurrentTime()/10 == me-&gt;alarm_time )</guard>
+       <choice_glyph conn="26,118,4,3,5,12">
+        <action box="0,-4,16,3"/>
+       </choice_glyph>
+      </choice>
+      <tran_glyph conn="26,106,2,-1,12">
+       <action box="0,-2,10,2"/>
+      </tran_glyph>
+     </tran>
      <state name="Ticking">
       <entry>Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW, TICKING_CURR_TIME_COL );</entry>
       <exit>/* Clear the display, while exiting this state */
 display_clear();</exit>
-      <tran trig="SET" target="../../2/2">
+      <tran trig="SET" target="../../3/2">
        <action>/* get the current time in temp variable */
 me-&gt;temp_time = Clock_Alarm_GetCurrentTime()/10u;
 /* Check if mode is 24h or 12h */
@@ -156,7 +168,7 @@ else
         <action box="0,-2,10,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="OK" target="../../2/3">
+      <tran trig="OK" target="../../3/3">
        <tran_glyph conn="30,19,1,3,4,51,10">
         <action box="0,-2,10,2"/>
        </tran_glyph>
@@ -177,14 +189,14 @@ else
 display_clear();
 /* turn of the display blinking */
 display_cursor_off_blinkoff();</exit>
-      <tran trig="OK" target="../../1">
+      <tran trig="OK" target="../../2">
        <action>
 </action>
        <tran_glyph conn="38,88,3,2,-16,-64">
         <action box="0,-2,10,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="ABRT" target="../../1">
+      <tran trig="ABRT" target="../../2">
        <tran_glyph conn="38,84,3,2,-12,-60">
         <action box="0,-2,10,2"/>
        </tran_glyph>
@@ -545,6 +557,12 @@ display_cursor_on_blinkon();</entry>
         </initial_glyph>
        </initial>
        <tran trig="OK">
+        <action>me-&gt;alarm_status = me-&gt;temp_digit;
+if(me-&gt;temp_format != FORMAT_24H)
+{
+  me-&gt;temp_time = Convert12H_To_24H( me-&gt;temp_time, (time_format_t)me-&gt;temp_format);
+}
+me-&gt;alarm_time = me-&gt;temp_time;</action>
         <choice>
          <guard>0</guard>
          <choice_glyph conn="79,96,5,-1,11">
@@ -691,7 +709,8 @@ else if( me-&gt;temp_format == FORMAT_PM )
 /* update the format on lcd */
 display_write( msg, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
 /* set the cursor again to orignal position */
-display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );</action>
+display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
+Serial.println(&quot;AS Format SET Signal&quot;);</action>
          <tran_glyph conn="92,88,3,-1,12">
           <action box="0,-2,10,2"/>
          </tran_glyph>
@@ -903,6 +922,10 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_HOUR_D1_COL);</ac
         </state_glyph>
        </state>
        <state name="Alarm_On_Off">
+        <entry>me-&gt;temp_digit = 0u;
+display_erase_block( ALARM_SETTING_STATUS_ROW, 0, 15);
+display_write( &quot;ALARM OFF&quot;, ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+display_set_cursor(ALARM_SETTING_STATUS_ROW,ALARM_SETTING_STATUS_COL);</entry>
         <tran trig="SET">
          <action>if( me-&gt;temp_digit )
 {
@@ -919,7 +942,9 @@ display_set_cursor( ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);</action
           <action box="0,-2,10,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="138,63,14,10"/>
+        <state_glyph node="138,63,14,10">
+         <entry box="1,2,6,2"/>
+        </state_glyph>
        </state>
        <state_glyph node="44,57,110,44">
         <entry box="1,2,6,2"/>
@@ -932,14 +957,75 @@ display_set_cursor( ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);</action
      <state_glyph node="8,3,150,103"/>
     </state>
     <state name="Notify">
-     <tran trig="OK" target="../../1" cpref="../../1/0">
-      <tran_glyph conn="38,114,3,3,-50,-86,19">
+     <entry>me-&gt;timeout = 0;</entry>
+     <exit>display_clear();</exit>
+     <initial target="../3">
+      <initial_glyph conn="41,136,5,2,7,-3">
        <action box="0,-2,10,2"/>
+      </initial_glyph>
+     </initial>
+     <tran trig="OK" target="../../1" cpref="../../1/0">
+      <tran_glyph conn="38,125,3,3,-34,-97,3">
+       <action box="0,0,10,2"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="38,109,18,11"/>
+     <tran trig="TICK">
+      <action>Clock_Alarm_DisplayCurrentTime( me, ALARM_SETTING_CURR_TIME_ROW, ALARM_SETTING_CURR_TIME_COL);</action>
+      <choice target="../../../1/2">
+       <guard brief="Alarm Timeout?">++me-&gt;alarm_timeout == 200u</guard>
+       <action>me-&gt;alarm_timeout = 0u;</action>
+       <choice_glyph conn="23,138,5,2,-5,-114">
+        <action box="-5,1,16,2"/>
+       </choice_glyph>
+      </choice>
+      <tran_glyph conn="38,138,3,-1,-15">
+       <action box="0,-1,10,2"/>
+      </tran_glyph>
+     </tran>
+     <state name="Notify_Msg_On">
+      <entry>display_write( &quot;*ALARM*&quot;, ALARM_NOTIFY_MSG_ROW, ALARM_NOTIFY_MSG_COL);</entry>
+      <tran trig="TICK">
+       <action>me-&gt;timeout++;</action>
+       <choice target="../../../4">
+        <guard brief="Timeout?">me-&gt;timeout == 10</guard>
+        <action>me-&gt;timeout = 0;</action>
+        <choice_glyph conn="67,128,5,3,5">
+         <action box="-4,1,10,2"/>
+        </choice_glyph>
+       </choice>
+       <tran_glyph conn="62,128,1,-1,5">
+        <action box="0,-2,10,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="43,122,19,11">
+       <entry box="1,2,6,2"/>
+      </state_glyph>
+     </state>
+     <state name="Notify_Msg_Off">
+      <entry>display_erase_block( ALARM_NOTIFY_MSG_ROW, ALARM_NOTIFY_MSG_COL, 10);</entry>
+      <tran trig="TICK">
+       <action>me-&gt;timeout++;</action>
+       <choice target="../../../3">
+        <guard brief="Timeout?">me-&gt;timeout == 10</guard>
+        <action>me-&gt;timeout = 0;</action>
+        <choice_glyph conn="67,138,5,2,-12,-5">
+         <action box="1,0,10,2"/>
+        </choice_glyph>
+       </choice>
+       <tran_glyph conn="84,133,2,-1,5,-17">
+        <action box="1,3,11,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="72,122,19,11">
+       <entry box="1,2,6,2"/>
+      </state_glyph>
+     </state>
+     <state_glyph node="38,117,58,24">
+      <entry box="1,2,6,2"/>
+      <exit box="1,4,6,2"/>
+     </state_glyph>
     </state>
-    <state_diagram size="161,141"/>
+    <state_diagram size="161,144"/>
    </statechart>
   </class>
   <attribute name="super_ClockAlarm" type="QHsm *const" visibility="0x00" properties="0x00">
