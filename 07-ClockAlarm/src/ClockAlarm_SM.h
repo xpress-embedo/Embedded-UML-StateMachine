@@ -63,6 +63,11 @@ typedef enum time_format
 #define CLOCK_SETTING_TIME_MIN_D2_COL     (6u)
 #define CLOCK_SETTING_TIME_SEC_D1_COL     (8u)
 #define CLOCK_SETTING_TIME_SEC_D2_COL     (9u)
+#define CLOCK_SETTING_TIME_FMT_COL        (11u)
+
+#define CLOCK_SETTING_ERR_MSG_ROW         (2u)
+#define CLOCK_SETTING_ERR_MSG_COL         (4u)
+#define CLOCK_SETTING_ERR_MSG_COL_END     (9u)
 
 /*.$declare${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm_ctor} ...............................................*/
