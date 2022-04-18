@@ -94,11 +94,11 @@ display_write(time_as_string, row, col);</code>
 
 /* convert time to hh:mm:ss format */
 time_as_string = IntegerTime_ToString( me-&gt;temp_time );
+time_as_string.concat(' ');
 
 /* concatenate AM/PM information */
 if( me-&gt;temp_format != FORMAT_24H )
 {
-  time_as_string.concat(' ');
   if( me-&gt;temp_format == FORMAT_AM )
   {
     time_as_string.concat(&quot;AM &quot;);
@@ -107,6 +107,10 @@ if( me-&gt;temp_format != FORMAT_24H )
   {
     time_as_string.concat(&quot;PM &quot;);
   }
+}
+else
+{
+    time_as_string.concat(&quot;24H&quot;);
 }
 /* update the display */
 display_write( time_as_string, row, col);</code>
@@ -151,7 +155,7 @@ me-&gt;temp_time = Clock_Alarm_GetCurrentTime()/10u;
 if( me-&gt;time_mode == TIME_MODE_12H )
 {
   /* Check if AM or PM */
-  if( GetAM_PM( me-&gt;temp_time).equals(&quot;AM&quot;) )
+  if( GetAM_PM( me-&gt;temp_time).equals(&quot;AM &quot;) )
   {
     me-&gt;temp_format = FORMAT_AM;
   }
@@ -159,6 +163,7 @@ if( me-&gt;time_mode == TIME_MODE_12H )
   {
     me-&gt;temp_format = FORMAT_PM;
   }
+  me-&gt;temp_time = Convert24H_To_12H(me-&gt;temp_time);
 }
 else
 {
@@ -169,6 +174,26 @@ else
        </tran_glyph>
       </tran>
       <tran trig="OK" target="../../3/3">
+       <action>/* get the current alarm time in temp variable */
+me-&gt;temp_time = me-&gt;alarm_time;
+/* Check if mode is 24h or 12h */
+if( me-&gt;time_mode == TIME_MODE_12H )
+{
+  /* Check if AM or PM */
+  if( GetAM_PM( me-&gt;temp_time).equals(&quot;AM &quot;) )
+  {
+    me-&gt;temp_format = FORMAT_AM;
+  }
+  else
+  {
+    me-&gt;temp_format = FORMAT_PM;
+  }
+  me-&gt;temp_time = Convert24H_To_12H(me-&gt;temp_time);
+}
+else
+{
+  me-&gt;temp_format = FORMAT_24H;
+}</action>
        <tran_glyph conn="30,19,1,3,4,51,10">
         <action box="0,-2,10,2"/>
        </tran_glyph>
@@ -494,7 +519,7 @@ display_cursor_on_blinkon();</action>
         <tran trig="OK">
          <action brief="OK Ignored"/>
          <tran_glyph conn="152,51,1,-1,-7">
-          <action box="-21,-1,13,2"/>
+          <action box="-18,1,13,2"/>
          </tran_glyph>
         </tran>
         <state name="Error_On">
@@ -549,7 +574,8 @@ me-&gt;timeout = 0u;</action>
        </state_glyph>
       </state>
       <state name="Alarm_Setting">
-       <entry>Clock_Alarm_DisplayClockSettingTime(me,CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_COL);
+       <entry>Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
+/* turn on the blinking on the cursor */
 display_cursor_on_blinkon();</entry>
        <initial target="../10">
         <initial_glyph conn="46,76,5,2,6,-3">
@@ -709,8 +735,7 @@ else if( me-&gt;temp_format == FORMAT_PM )
 /* update the format on lcd */
 display_write( msg, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
 /* set the cursor again to orignal position */
-display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
-Serial.println(&quot;AS Format SET Signal&quot;);</action>
+display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );</action>
          <tran_glyph conn="92,88,3,-1,12">
           <action box="0,-2,10,2"/>
          </tran_glyph>

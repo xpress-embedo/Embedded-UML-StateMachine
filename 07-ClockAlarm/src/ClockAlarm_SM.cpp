@@ -212,11 +212,11 @@ static void Clock_Alarm_DisplayClockSettingTime(Clock_Alarm * const me, uint8_t 
 
     /* convert time to hh:mm:ss format */
     time_as_string = IntegerTime_ToString( me->temp_time );
+    time_as_string.concat(' ');
 
     /* concatenate AM/PM information */
     if( me->temp_format != FORMAT_24H )
     {
-      time_as_string.concat(' ');
       if( me->temp_format == FORMAT_AM )
       {
         time_as_string.concat("AM ");
@@ -225,6 +225,10 @@ static void Clock_Alarm_DisplayClockSettingTime(Clock_Alarm * const me, uint8_t 
       {
         time_as_string.concat("PM ");
       }
+    }
+    else
+    {
+        time_as_string.concat("24H");
     }
     /* update the display */
     display_write( time_as_string, row, col);
@@ -300,7 +304,7 @@ static QState Clock_Alarm_Ticking(Clock_Alarm * const me) {
             if( me->time_mode == TIME_MODE_12H )
             {
               /* Check if AM or PM */
-              if( GetAM_PM( me->temp_time).equals("AM") )
+              if( GetAM_PM( me->temp_time).equals("AM ") )
               {
                 me->temp_format = FORMAT_AM;
               }
@@ -308,6 +312,7 @@ static QState Clock_Alarm_Ticking(Clock_Alarm * const me) {
               {
                 me->temp_format = FORMAT_PM;
               }
+              me->temp_time = Convert24H_To_12H(me->temp_time);
             }
             else
             {
@@ -318,6 +323,26 @@ static QState Clock_Alarm_Ticking(Clock_Alarm * const me) {
         }
         /*.${HSMs::Clock_Alarm::SM::Clock::Ticking::OK} */
         case OK_SIG: {
+            /* get the current alarm time in temp variable */
+            me->temp_time = me->alarm_time;
+            /* Check if mode is 24h or 12h */
+            if( me->time_mode == TIME_MODE_12H )
+            {
+              /* Check if AM or PM */
+              if( GetAM_PM( me->temp_time).equals("AM ") )
+              {
+                me->temp_format = FORMAT_AM;
+              }
+              else
+              {
+                me->temp_format = FORMAT_PM;
+              }
+              me->temp_time = Convert24H_To_12H(me->temp_time);
+            }
+            else
+            {
+              me->temp_format = FORMAT_24H;
+            }
             status_ = Q_TRAN(&Clock_Alarm_Alarm_Setting);
             break;
         }
@@ -843,7 +868,8 @@ static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me) {
     switch (Q_SIG(me)) {
         /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting} */
         case Q_ENTRY_SIG: {
-            Clock_Alarm_DisplayClockSettingTime(me,CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_COL);
+            Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
+            /* turn on the blinking on the cursor */
             display_cursor_on_blinkon();
             status_ = Q_HANDLED();
             break;
@@ -1045,7 +1071,6 @@ static QState Clock_Alarm_AS_Format(Clock_Alarm * const me) {
             display_write( msg, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
             /* set the cursor again to orignal position */
             display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
-            Serial.println("AS Format SET Signal");
             status_ = Q_HANDLED();
             break;
         }
@@ -1497,11 +1522,11 @@ String GetAM_PM( uint32_t time24h )
     }
     else if ( hour == 12U )
     {
-        am_pm = "PM";
+        am_pm = "PM ";
     }
     else
     {
-        am_pm = "AM";
+        am_pm = "AM ";
     }
 
     return am_pm;
