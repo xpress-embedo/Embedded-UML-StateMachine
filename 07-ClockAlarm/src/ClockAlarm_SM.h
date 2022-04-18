@@ -26,6 +26,7 @@ enum ClockAlarm_Signals
   ABRT_SIG,
   ALARM_SIG,
   TICK_SIG,
+  IGNORE_SIG,
   MAX_SIG
 };
 
@@ -52,8 +53,16 @@ typedef enum time_format
 #define INITIAL_ALARM_TIME      (8ul*3600ul)                                     /* 8 hours */
 #define MAX_TIME                (864000ul)                                       /* 24*3600*10 */
 /* Display Related Macros */
-#define TICKING_CURR_TIME_ROW   (0u)
-#define TICKING_CURR_TIME_COL   (3u)
+#define TICKING_CURR_TIME_ROW             (0u)
+#define TICKING_CURR_TIME_COL             (3u)
+#define CLOCK_SETTING_TIME_ROW            (0u)
+#define CLOCK_SETTING_TIME_COL            (2u)
+#define CLOCK_SETTING_TIME_HOUR_D1_COL    (2u)
+#define CLOCK_SETTING_TIME_HOUR_D2_COL    (3u)
+#define CLOCK_SETTING_TIME_MIN_D1_COL     (5u)
+#define CLOCK_SETTING_TIME_MIN_D2_COL     (6u)
+#define CLOCK_SETTING_TIME_SEC_D1_COL     (8u)
+#define CLOCK_SETTING_TIME_SEC_D2_COL     (9u)
 
 /*.$declare${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm_ctor} ...............................................*/

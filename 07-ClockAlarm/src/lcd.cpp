@@ -66,3 +66,23 @@ void lcd_print_string( String s )
 {
   lcd.print(s);
 }
+
+void lcd_cursor_show( void )
+{
+  lcd.cursor();
+}
+
+void lcd_cursor_blink( void )
+{
+  lcd.blink();
+}
+
+void lcd_create_custom_char( uint8_t num, uint8_t *data)
+{
+  lcd.createChar(num, data);
+}
+
+void lcd_display_custom_char( uint8_t num)
+{
+  lcd.write(num);
+}

@@ -26,5 +26,9 @@ void lcd_cursor_off( void );
 void lcd_cursor_blinkoff( void );
 void lcd_print_number( int num );
 void lcd_print_string( String s );
+void lcd_cursor_show( void );
+void lcd_cursor_blink( void );
+void lcd_create_custom_char( uint8_t num, uint8_t *data);
+void lcd_display_custom_char( uint8_t num);
 
 #endif 
