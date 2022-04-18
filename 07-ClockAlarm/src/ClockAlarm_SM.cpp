@@ -81,6 +81,17 @@ static QState Clock_Alarm_CS_Error(Clock_Alarm * const me);
 static QState Clock_Alarm_Error_On(Clock_Alarm * const me);
 static QState Clock_Alarm_Error_Off(Clock_Alarm * const me);
 static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Sec_D1(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Sec_D2(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Format(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Min_D2(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Min_D1(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Hour_D2(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Error(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Err_On(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Error_Off(Clock_Alarm * const me);
+static QState Clock_Alarm_AS_Hour_D1(Clock_Alarm * const me);
+static QState Clock_Alarm_Alarm_On_Off(Clock_Alarm * const me);
 static QState Clock_Alarm_Notify(Clock_Alarm * const me);
 /*.$enddecl${HSMs::Clock_Alarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 
@@ -205,11 +216,11 @@ static void Clock_Alarm_DisplayClockSettingTime(Clock_Alarm * const me, uint8_t 
       time_as_string.concat(' ');
       if( me->temp_format == FORMAT_AM )
       {
-        time_as_string.concat("AM");
+        time_as_string.concat("AM ");
       }
       else
       {
-        time_as_string.concat("PM");
+        time_as_string.concat("PM ");
       }
     }
     /* update the display */
@@ -324,18 +335,7 @@ static QState Clock_Alarm_Settings(Clock_Alarm * const me) {
         }
         /*.${HSMs::Clock_Alarm::SM::Clock::Settings::OK} */
         case OK_SIG: {
-            if( me->temp_format != FORMAT_24H )
-            {
-              me->temp_time = Convert12H_To_24H( me->temp_time, (time_format_t)(me->temp_format));
-              me->time_mode = TIME_MODE_12H;
-            }
-            else
-            {
-              me->time_mode = TIME_MODE_24H;
-            }
 
-            me->temp_time *= 10ul;
-            Clock_Alarm_SetCurrentTime( me->temp_time);
 
             status_ = Q_TRAN(&Clock_Alarm_Ticking);
             break;
@@ -367,6 +367,29 @@ static QState Clock_Alarm_Clock_Setting(Clock_Alarm * const me) {
         /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Clock_Setting::initial} */
         case Q_INIT_SIG: {
             status_ = Q_TRAN(&Clock_Alarm_CS_Hour_D1);
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Clock_Setting::OK} */
+        case OK_SIG: {
+            if( me->temp_format != FORMAT_24H )
+            {
+              me->temp_time = Convert12H_To_24H( me->temp_time, (time_format_t)(me->temp_format));
+              me->time_mode = TIME_MODE_12H;
+            }
+            else
+            {
+              me->time_mode = TIME_MODE_24H;
+            }
+
+            me->temp_time *= 10ul;
+            Clock_Alarm_SetCurrentTime( me->temp_time);
+            /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Clock_Setting::OK::[AlwaysFalse]} */
+            if (0) {
+                status_ = Q_HANDLED();
+            }
+            else {
+                status_ = Q_UNHANDLED();
+            }
             break;
         }
         default: {
@@ -448,7 +471,6 @@ static QState Clock_Alarm_CS_Min_D1(Clock_Alarm * const me) {
             Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
             /* reset the cursor back to the same position */
             display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_MIN_D1_COL);
-
             status_ = Q_HANDLED();
             break;
         }
@@ -642,7 +664,7 @@ static QState Clock_Alarm_CS_Format(Clock_Alarm * const me) {
     switch (Q_SIG(me)) {
         /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Clock_Setting::CS_Format} */
         case Q_ENTRY_SIG: {
-            String msg[3] = { "24H", "AM", "PM" };
+            String msg[3] = { "24H", "AM ", "PM " };
             /* Set the cursor */
             display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
             /* update the format on lcd */
@@ -658,12 +680,12 @@ static QState Clock_Alarm_CS_Format(Clock_Alarm * const me) {
             if( me->temp_format == FORMAT_24H )
             {
               me->temp_format = FORMAT_AM;
-              msg = "AM";
+              msg = "AM ";
             }
             else if( me->temp_format == FORMAT_AM )
             {
               me->temp_format = FORMAT_PM;
-              msg = "PM";
+              msg = "PM ";
             }
             else if( me->temp_format == FORMAT_PM )
             {
@@ -805,8 +827,514 @@ static QState Clock_Alarm_Error_Off(Clock_Alarm * const me) {
 static QState Clock_Alarm_Alarm_Setting(Clock_Alarm * const me) {
     QState status_;
     switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting} */
+        case Q_ENTRY_SIG: {
+            Clock_Alarm_DisplayClockSettingTime(me,CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_COL);
+            display_cursor_on_blinkon();
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::initial} */
+        case Q_INIT_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_AS_Hour_D1);
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::OK} */
+        case OK_SIG: {
+            /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::OK::[0]} */
+            if (0) {
+                status_ = Q_HANDLED();
+            }
+            else {
+                status_ = Q_UNHANDLED();
+            }
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::TICK} */
+        case TICK_SIG: {
+            /* Display Current Time */
+            Clock_Alarm_DisplayCurrentTime( me, ALARM_SETTING_CURR_TIME_ROW, ALARM_SETTING_CURR_TIME_COL );
+            if( QHsm_state(me) != Q_STATE_CAST(&Clock_Alarm_Alarm_On_Off))
+            {
+              Clock_Alarm_DisplayClockSettingTime(me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
+            }
+
+            if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_AS_Hour_D1))
+            {
+              display_set_cursor( CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_HOUR_D1_COL);
+            }
+            else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_AS_Hour_D2))
+            {
+              display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_HOUR_D2_COL);
+            }
+            else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_AS_Min_D1))
+            {
+              display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_MIN_D1_COL);
+            }
+            else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_AS_Min_D2))
+            {
+              display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_MIN_D2_COL);
+            }
+            else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_AS_Sec_D1))
+            {
+              display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_SEC_D1_COL);
+            }
+            else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_AS_Sec_D2))
+            {
+              display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_SEC_D2_COL);
+            }
+            else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_AS_Format))
+            {
+              display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_FMT_COL);
+            }
+            else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_Alarm_On_Off))
+            {
+              display_set_cursor(CLOCK_SETTING_TIME_ROW,ALARM_SETTING_STATUS_COL);
+            }
+            status_ = Q_HANDLED();
+            break;
+        }
         default: {
             status_ = Q_SUPER(&Clock_Alarm_Settings);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Sec_D1} .....*/
+static QState Clock_Alarm_AS_Sec_D1(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Sec_D1} */
+        case Q_ENTRY_SIG: {
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_SEC_D1_COL);
+            /* extract digit-1 of the temp time */
+            me->temp_digit = DIGIT1( GET_SEC(me->temp_time) );
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Sec_D1::SET} */
+        case SET_SIG: {
+            /* increment the temp digit */
+            me->temp_digit++;
+            /* Digit-1 value of second digit can vary between 0, 1...5 */
+            me->temp_digit %= 6u;
+            /* now we have to update this value in temp_time variable*/
+            /* for this we have to first delete the existing time and then add this digit information*/
+            me->temp_time -= DIGIT1( GET_SEC(me->temp_time) ) * 10ul;
+            me->temp_time += (me->temp_digit * 10ul);
+
+            /* display this updated value on display */
+            /* NOTE: column information should be original because here we are displaying the complete time */
+            Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
+            /* reset the cursor back to the same position */
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_SEC_D1_COL);
+
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Sec_D1::OK} */
+        case OK_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_AS_Sec_D2);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Alarm_Setting);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Sec_D2} .....*/
+static QState Clock_Alarm_AS_Sec_D2(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Sec_D2} */
+        case Q_ENTRY_SIG: {
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_SEC_D2_COL);
+            /* extract digit-2 of the temp time */
+            me->temp_digit = DIGIT2( GET_SEC(me->temp_time) );
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Sec_D2::SET} */
+        case SET_SIG: {
+            /* increment the temp digit */
+            me->temp_digit++;
+            /* Digit-1 value of minute digit can vary between 0, 1...9 */
+            me->temp_digit %= 10u;
+            /* now we have to update this value in temp_time variable*/
+            /* for this we have to first delete the existing time and then add this digit information*/
+            me->temp_time -= DIGIT2( GET_SEC(me->temp_time) );
+            me->temp_time += (me->temp_digit);
+
+            /* display this updated value on display */
+            Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_SEC_D2_COL);
+            /* reset the cursor back to the same position */
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_SEC_D2_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Sec_D2::OK} */
+        case OK_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_AS_Format);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Alarm_Setting);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Format} .....*/
+static QState Clock_Alarm_AS_Format(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Format} */
+        case Q_ENTRY_SIG: {
+            String msg[3] = { "24H", "AM ", "PM " };
+            /* Set the cursor */
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
+            /* update the format on lcd */
+            display_write( msg[me->temp_format], CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
+            /* set the cursor again to orignal position */
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Format::SET} */
+        case SET_SIG: {
+            String msg;
+            if( me->temp_format == FORMAT_24H )
+            {
+              me->temp_format = FORMAT_AM;
+              msg = "AM ";
+            }
+            else if( me->temp_format == FORMAT_AM )
+            {
+              me->temp_format = FORMAT_PM;
+              msg = "PM ";
+            }
+            else if( me->temp_format == FORMAT_PM )
+            {
+              me->temp_format = FORMAT_24H;
+              msg = "24H";
+            }
+            /* update the format on lcd */
+            display_write( msg, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
+            /* set the cursor again to orignal position */
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Format::OK} */
+        case OK_SIG: {
+            /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Format::OK::[TimeIsCorrect?]} */
+            if (IsTime_NotCorrect( me->temp_time, (time_format_t)me->temp_format )) {
+                status_ = Q_TRAN(&Clock_Alarm_AS_Error);
+            }
+            /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Format::OK::[else]} */
+            else {
+                status_ = Q_TRAN(&Clock_Alarm_Alarm_On_Off);
+            }
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Alarm_Setting);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Min_D2} .....*/
+static QState Clock_Alarm_AS_Min_D2(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Min_D2} */
+        case Q_ENTRY_SIG: {
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_MIN_D2_COL);
+            /* extract digit-2 of the temp time */
+            me->temp_digit = DIGIT2( GET_MIN(me->temp_time) );
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Min_D2::SET} */
+        case SET_SIG: {
+            /* increment the temp digit */
+            me->temp_digit++;
+            /* Digit-1 value of minute digit can vary between 0, 1...9 */
+            me->temp_digit %= 10u;
+            /* now we have to update this value in temp_time variable*/
+            /* for this we have to first delete the existing time and then add this digit information*/
+            me->temp_time -= DIGIT2( GET_MIN(me->temp_time) ) * 60ul;
+            me->temp_time += (me->temp_digit) * 60ul;
+
+            /* display this updated value on display */
+            /* NOTE: column information should be original because here we are displaying the complete time */
+            Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
+            /* reset the cursor back to the same position */
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_MIN_D2_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Min_D2::OK} */
+        case OK_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_AS_Sec_D1);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Alarm_Setting);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Min_D1} .....*/
+static QState Clock_Alarm_AS_Min_D1(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Min_D1} */
+        case Q_ENTRY_SIG: {
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_MIN_D1_COL);
+            /* extract digit-1 of the temp time */
+            me->temp_digit = DIGIT1( GET_MIN(me->temp_time) );
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Min_D1::SET} */
+        case SET_SIG: {
+            /* increment the temp digit */
+            me->temp_digit++;
+            /* Digit-1 value of minute digit can vary between 0, 1...5 */
+            me->temp_digit %= 6u;
+            /* now we have to update this value in temp_time variable*/
+            /* for this we have to first delete the existing time and then add this digit information*/
+            me->temp_time -= DIGIT1( GET_MIN(me->temp_time) ) * 10ul * 60ul;
+            me->temp_time += (me->temp_digit * 10ul) * 60ul;
+
+            /* display this updated value on display */
+            /* NOTE: column information should be original because here we are displaying the complete time */
+            Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
+            /* reset the cursor back to the same position */
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_MIN_D1_COL);
+
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Min_D1::OK} */
+        case OK_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_AS_Min_D2);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Alarm_Setting);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Hour_D2} ....*/
+static QState Clock_Alarm_AS_Hour_D2(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Hour_D2} */
+        case Q_ENTRY_SIG: {
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_HOUR_D2_COL);
+            /* extract digit-2 of the temp time */
+            me->temp_digit = DIGIT2( GET_HOUR(me->temp_time) );
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Hour_D2::SET} */
+        case SET_SIG: {
+            /* increment the temp digit */
+            me->temp_digit++;
+            /* Digit-1 value of hour digit can vary between 0, 1 ... 9 */
+            me->temp_digit %= 10u;
+            /* now we have to update this value in temp_time variable*/
+            /* for this we have to first delete the existing time and then add this digit information*/
+            me->temp_time -= DIGIT2( GET_HOUR(me->temp_time) ) * 3600ul;
+            me->temp_time += (me->temp_digit) * 3600ul;
+
+            /* display this updated value on display */
+            /* NOTE: column information should be original because here we are displaying the complete time */
+            Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
+            /* reset the cursor back to the same position */
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_HOUR_D2_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Hour_D2::OK} */
+        case OK_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_AS_Min_D1);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Alarm_Setting);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error} ......*/
+static QState Clock_Alarm_AS_Error(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error} */
+        case Q_ENTRY_SIG: {
+            display_cursor_off_blinkoff();
+            display_erase_block( ALARM_SETTING_CURR_TIME_ROW, 0, 15);
+            me->timeout = 0;
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error} */
+        case Q_EXIT_SIG: {
+            display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL,CLOCK_SETTING_ERR_MSG_COL_END);
+            me->timeout = 0UL;
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error::initial} */
+        case Q_INIT_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_AS_Err_On);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Alarm_Setting);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error::AS_Err_On} */
+static QState Clock_Alarm_AS_Err_On(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error::AS_Err_On} */
+        case Q_ENTRY_SIG: {
+            display_write( "Error!", CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error::AS_Err_On::TICK} */
+        case TICK_SIG: {
+            /* Increment the timeout variable */
+            me->timeout++;
+            /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error::AS_Err_On::TICK::[Timeout?]} */
+            if (me->timeout == 10) {
+                /* reset the timeout counter */
+                me->timeout = 0u;
+                status_ = Q_TRAN(&Clock_Alarm_AS_Error_Off);
+            }
+            else {
+                status_ = Q_UNHANDLED();
+            }
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_AS_Error);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error::AS_Error_Off} */
+static QState Clock_Alarm_AS_Error_Off(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error::AS_Error_Off} */
+        case Q_ENTRY_SIG: {
+            /* Erase the error message */
+            display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL, CLOCK_SETTING_ERR_MSG_COL_END);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error::AS_Error_Off::TICK} */
+        case TICK_SIG: {
+            me->timeout++;
+            /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Error::AS_Error_Off::TICK::[me->timeout==10]} */
+            if (me->timeout == 10) {
+                /* reset the timeout counter */
+                me->timeout = 0u;
+                status_ = Q_TRAN(&Clock_Alarm_AS_Err_On);
+            }
+            else {
+                status_ = Q_UNHANDLED();
+            }
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_AS_Error);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Hour_D1} ....*/
+static QState Clock_Alarm_AS_Hour_D1(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Hour_D1} */
+        case Q_ENTRY_SIG: {
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_HOUR_D1_COL);
+            me->temp_digit = DIGIT1( GET_HOUR(me->temp_time) );
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Hour_D1::SET} */
+        case SET_SIG: {
+            /* increment the temp digit */
+            me->temp_digit++;
+            /* Digit-1 value of hour digit can vary between 0, 1 and 2 */
+            me->temp_digit %= 3u;
+            /* now we have to update this value in temp_time variable*/
+            /* for this we have to first delete the existing time and then add this digit information*/
+            me->temp_time -= DIGIT1( GET_HOUR(me->temp_time) ) * 10ul * 3600ul;
+            me->temp_time += (me->temp_digit * 10ul) * 3600ul;
+
+            /* display this updated value on display */
+            Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_HOUR_D1_COL);
+            /* reset the cursor back to the same position */
+            display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_HOUR_D1_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::AS_Hour_D1::OK} */
+        case OK_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_AS_Hour_D2);
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Alarm_Setting);
+            break;
+        }
+    }
+    return status_;
+}
+/*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::Alarm_On_Off} ..*/
+static QState Clock_Alarm_Alarm_On_Off(Clock_Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${HSMs::Clock_Alarm::SM::Clock::Settings::Alarm_Setting::Alarm_On_Off::SET} */
+        case SET_SIG: {
+            if( me->temp_digit )
+            {
+              display_write("ALARM OFF", ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+              me->temp_digit = 0;
+            }
+            else
+            {
+              display_write("ALARM ON ", ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+              me->temp_digit = 1;
+            }
+            display_set_cursor( ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Clock_Alarm_Alarm_Setting);
             break;
         }
     }
@@ -841,11 +1369,11 @@ String GetAM_PM( uint32_t time24h )
     uint8_t hour = GET_HOUR( time24h );
     if(hour == 0U)
     {
-        am_pm = "AM";
+        am_pm = "AM ";
     }
     else if( hour > 12U)
     {
-        am_pm = "PM";
+        am_pm = "PM ";
     }
     else if ( hour == 12U )
     {

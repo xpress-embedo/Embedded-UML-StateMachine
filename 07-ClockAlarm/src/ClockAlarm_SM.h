@@ -69,6 +69,13 @@ typedef enum time_format
 #define CLOCK_SETTING_ERR_MSG_COL         (4u)
 #define CLOCK_SETTING_ERR_MSG_COL_END     (9u)
 
+#define ALARM_SETTING_CURR_TIME_ROW       (1u)
+#define ALARM_SETTING_CURR_TIME_COL       (2u)
+#define ALARM_SETTING_STATUS_ROW          (0u)
+#define ALARM_SETTING_STATUS_COL          (4u)
+#define ALARM_NOTIFY_MSG_ROW              (0u)
+#define ALARM_NOTIFY_MSG_COL              (4u)
+
 /*.$declare${HSMs::Clock_Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${HSMs::Clock_Alarm_ctor} ...............................................*/
 void Clock_Alarm_ctor(void);
