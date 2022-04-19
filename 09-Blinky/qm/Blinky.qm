@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model version="5.1.1" links="0">
+ <framework name="qpn"/>
+ <package name="AOs" stereotype="0x02">
+  <class name="Blinky" superclass="qpn::QActive">
+   <statechart properties="0x00">
+    <initial target="../1">
+     <action>QActive_armX((QActive *)me, 0U, BSP_TICKS_PER_SEC/2U, BSP_TICKS_PER_SEC/2U);</action>
+     <initial_glyph conn="11,2,5,0,15,7">
+      <action box="0,-2,10,2"/>
+     </initial_glyph>
+    </initial>
+    <state name="off">
+     <entry brief="LED Off">digitalWrite( LED_L, LOW);</entry>
+     <tran trig="Q_TIMEOUT" target="../../2">
+      <tran_glyph conn="40,20,1,1,8,14,-8">
+       <action box="0,-2,10,2"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="12,9,28,14">
+      <entry box="1,2,10,2"/>
+     </state_glyph>
+    </state>
+    <state name="on">
+     <entry brief="LED On">digitalWrite( LED_L, HIGH);</entry>
+     <tran trig="Q_TIMEOUT" target="../../1">
+      <tran_glyph conn="12,34,3,3,-6,-14,6">
+       <action box="-10,0,10,2"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="12,28,28,14">
+      <entry box="1,2,10,2"/>
+     </state_glyph>
+    </state>
+    <state_diagram size="54,51"/>
+   </statechart>
+  </class>
+ </package>
+ <directory name="../src">
+  <file name="main.cpp">
+   <text>/* Some Important Points about QF (Active Object Framework)
+1) Create Event Queues (array of QEvt) for the active objects.
+2) Create and Initialize Active Object Control Block (QActiveCB)
+3) Call QF_init( maxActive ) to initialize the Active object framework of QP-nano
+  * this also calls the init funcvtion of underlying kernel.
+4) Call QF_run()
+  * this also calls the scheduler of the kernel and never returns
+5) Call QF_tickXISR() from your application's tick ISR
+*/
+
+#include &quot;qpn.h&quot;
+#include &quot;Arduino.h&quot;
+
+/* Macros */
+#define BSP_TICKS_PER_SEC           100u   /* Number of Ticks in one second */
+#define LED_L                       13u
+
+/* private function prototypes */
+static void sys_tick_init( void );
+
+/* Declare all AO classes */
+$declare${AOs::Blinky}
+
+/*Instance of AO Classes */
+Blinky AO_Blinky;
+
+/* 1) Create Event Queues (array of QEvt) for the active objects. */
+static QEvt BlinkyQueue[10u];        /* Event Queue Storage*/
+/* 2) Create and Initialize Active Object Control Block (QActiveCB) */
+QActiveCB const Q_ROM QF_active[] = 
+{
+  { (QActive *)0,           (QEvt *)0,           0U                 },
+  { (QActive *)&amp;AO_Blinky,  (QEvt *)BlinkyQueue, Q_DIM(BlinkyQueue) }
+};
+
+void  setup()
+{
+  Serial.begin(115200);
+  delay(10);
+
+  /* 3) Call QF_init( maxActive ) to initialize the Active object framework of QP-nano*/
+  QF_init( Q_DIM(QF_active) );
+  /* Initialize All Active objects (constructor)*/
+  QActive_ctor( &amp;AO_Blinky.super, Q_STATE_CAST(&amp;Blinky_initial));
+  
+  Serial.println(&quot;Program Started&quot;);
+  pinMode( LED_L, OUTPUT);
+}
+
+void loop()
+{
+  /* 4) Call QF_run() */
+  QF_run();
+}
+
+
+/* define all AO classes (state machine)...*/
+$define${AOs::Blinky}
+
+
+/* Timer Interrupt */
+ISR(TIMER2_COMPA_vect) 
+{
+  /* process time events for tick rate 0 */
+  QF_tickXISR(0); 
+}
+
+static void sys_tick_init( void )
+{
+  // set Timer2 in CTC mode, 1/1024 prescaler, start the timer ticking...
+  TCCR2A = (1U &lt;&lt; WGM21) | (0U &lt;&lt; WGM20);
+  TCCR2B = (1U &lt;&lt; CS22 ) | (1U &lt;&lt; CS21) | (1U &lt;&lt; CS20); // 1/2^10
+  ASSR  &amp;= ~(1U &lt;&lt; AS2);
+  TIMSK2 = (1U &lt;&lt; OCIE2A); // enable TIMER2 compare Interrupt
+  TCNT2  = 0U;
+
+  // set the output-compare register based on the desired tick frequency
+  OCR2A  = (F_CPU / BSP_TICKS_PER_SEC / 1024U) - 1U;
+}
+
+/* Below functions are the callbak functions from the QP Framework*/
+void QF_onStartup( void ) 
+{
+  sys_tick_init();
+}
+
+void QV_onIdle( void ) 
+{
+  /* this function called with interrupts DISABLED, and can be used to perform
+     activity/task like staying in sleep mode */
+}
+
+Q_NORETURN Q_onAssert( char const Q_ROM * const module, int location )
+{
+  Serial.println(&quot;Assertion Failure!!&quot;);
+  Serial.println((String)module);
+  Serial.println(location);
+  /* As per documentation it's not a good idea to do like this */
+  while(1);
+}</text>
+  </file>
+ </directory>
+</model>
