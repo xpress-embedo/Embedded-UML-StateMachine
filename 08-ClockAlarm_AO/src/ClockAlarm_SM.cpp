@@ -312,6 +312,7 @@ static QState Clock_Alarm_Ticking(Clock_Alarm * const me) {
         /*.${AOs::Clock_Alarm::SM::Clock::Ticking} */
         case Q_ENTRY_SIG: {
             Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW, TICKING_CURR_TIME_COL );
+            me->current_setting = NO_SETTING;
             status_ = Q_HANDLED();
             break;
         }
@@ -395,12 +396,24 @@ static QState Clock_Alarm_Settings(Clock_Alarm * const me) {
     QState status_;
     switch (Q_SIG(me)) {
         /*.${AOs::Clock_Alarm::SM::Clock::Settings} */
+        case Q_ENTRY_SIG: {
+            Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
+            display_cursor_on_blinkon();
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${AOs::Clock_Alarm::SM::Clock::Settings} */
         case Q_EXIT_SIG: {
             /* clear the display, when setting state is exited */
             display_clear();
             /* turn of the display blinking */
             display_cursor_off_blinkoff();
             status_ = Q_HANDLED();
+            break;
+        }
+        /*.${AOs::Clock_Alarm::SM::Clock::Settings::initial} */
+        case Q_INIT_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Hour_D1);
             break;
         }
         /*.${AOs::Clock_Alarm::SM::Clock::Settings::OK} */

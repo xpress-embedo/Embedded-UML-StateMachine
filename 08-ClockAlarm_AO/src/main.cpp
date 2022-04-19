@@ -4,6 +4,7 @@
 #include "lcd.h"
 #include "ClockAlarm_SM.h"
 #include "Button_SM.h"
+
 Q_DEFINE_THIS_FILE;
 
 /* Some Important Points about QF (Active Object Framework)
@@ -25,9 +26,11 @@ static void OK_Handler( void );
 
 Q_NORETURN Q_onAssert	(	char_t const *const 	module, int_t const 	location );
 
+uint8_t button_report_flag = 0x01;
+
 /* 1) Create Event Queues (array of QEvt) for the active objects. */
-static QEvt ClockAlarmQueue[5];
-static QEvt ButtonQueue[5];
+static QEvt ClockAlarmQueue[8];
+static QEvt ButtonQueue[8];
 
 /* 2) Create and Initialize Active Object Control Block (QActiveCB) */
 QActiveCB const QF_active[] = 
@@ -49,7 +52,6 @@ void setup()
   Button_ctor();
   /* 3) Call QF_init( maxActive ) to initialize the Active object framework of QP-nano */
   QF_init( Q_DIM(QF_active) );
-  sys_tick_init();
 }
 
 void loop() 
@@ -61,6 +63,11 @@ void loop()
         code like sleep mode.
   */
   QF_run();
+}
+
+void QF_onStartup( void )
+{
+  sys_tick_init();
 }
 
 void QV_onIdle( void )

@@ -123,7 +123,7 @@ Alarm_Init( &amp;me-&gt;alarm );
 Clock_Alarm_SetCurrentTime( INITIAL_CURRENT_TIME );
 /* Also set the time-mode */
 me-&gt;time_mode = TIME_MODE_12H;</action>
-     <initial_glyph conn="4,2,5,3,-1,15,9">
+     <initial_glyph conn="4,2,4,3,15,8">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
@@ -191,7 +191,8 @@ else if(me-&gt;current_setting == ALARM_SETTING)
       </tran_glyph>
      </tran>
      <state name="Ticking">
-      <entry>Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW, TICKING_CURR_TIME_COL );</entry>
+      <entry>Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW, TICKING_CURR_TIME_COL );
+me-&gt;current_setting = NO_SETTING;</entry>
       <exit>/* Clear the display, while exiting this state */
 display_clear();</exit>
       <tran trig="SET" target="../../4">
@@ -261,10 +262,17 @@ else
       </state_glyph>
      </state>
      <state name="Settings">
+      <entry>Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL);
+display_cursor_on_blinkon();</entry>
       <exit>/* clear the display, when setting state is exited */
 display_clear();
 /* turn of the display blinking */
 display_cursor_off_blinkoff();</exit>
+      <initial target="../8">
+       <initial_glyph conn="44,26,5,2,6,-3">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
       <tran trig="OK" target="../../3">
        <action>/* take action based on the current setting */
 if( me-&gt;current_setting == CLOCK_SETTING )
@@ -327,7 +335,7 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_HOUR_D2_COL);
          <action box="0,-2,10,2"/>
         </tran_glyph>
        </tran>
-       <tran trig="OK" target="../../3">
+       <tran trig="OK" target="../../4">
         <tran_glyph conn="80,19,1,3,8">
          <action box="0,-2,10,2"/>
         </tran_glyph>
@@ -359,7 +367,7 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_MIN_D1_COL);</act
          <action box="0,-2,10,2"/>
         </tran_glyph>
        </tran>
-       <tran trig="OK" target="../../4">
+       <tran trig="OK" target="../../5">
         <tran_glyph conn="102,19,1,3,8">
          <action box="0,-2,10,2"/>
         </tran_glyph>
@@ -391,7 +399,7 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_MIN_D2_COL);</act
          <action box="0,-2,10,2"/>
         </tran_glyph>
        </tran>
-       <tran trig="OK" target="../../5">
+       <tran trig="OK" target="../../6">
         <tran_glyph conn="117,23,2,0,5,-66,7">
          <action box="0,-2,10,2"/>
         </tran_glyph>
@@ -424,7 +432,7 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_SEC_D1_COL);
          <action box="0,-2,10,2"/>
         </tran_glyph>
        </tran>
-       <tran trig="OK" target="../../6">
+       <tran trig="OK" target="../../7">
         <tran_glyph conn="58,39,1,3,8">
          <action box="0,-2,10,2"/>
         </tran_glyph>
@@ -455,7 +463,7 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_SEC_D2_COL);</act
          <action box="0,-2,10,2"/>
         </tran_glyph>
        </tran>
-       <tran trig="OK" target="../../8">
+       <tran trig="OK" target="../../9">
         <tran_glyph conn="80,39,1,3,8">
          <action box="0,-2,10,2"/>
         </tran_glyph>
@@ -487,7 +495,7 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_HOUR_D1_COL);
          <action box="0,-2,10,2"/>
         </tran_glyph>
        </tran>
-       <tran trig="OK" target="../../2">
+       <tran trig="OK" target="../../3">
         <tran_glyph conn="58,19,1,3,8">
          <action box="0,-2,10,2"/>
         </tran_glyph>
@@ -530,7 +538,7 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );</actio
         </tran_glyph>
        </tran>
        <tran trig="OK">
-        <choice target="../../../9">
+        <choice target="../../../10">
          <guard brief="TimeIsCorrect?">IsTime_NotCorrect( me-&gt;temp_time, (time_format_t)me-&gt;temp_format )</guard>
          <choice_glyph conn="110,39,5,3,5,5,3">
           <action box="-8,1,12,3"/>
@@ -538,7 +546,7 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );</actio
         </choice>
         <choice>
          <guard>else</guard>
-         <choice target="../../../../10">
+         <choice target="../../../../11">
           <guard brief="AlaramSetting?">me-&gt;current_setting == ALARM_SETTING</guard>
           <choice_glyph conn="110,33,4,2,-2,30,-5">
            <action box="1,-4,15,2"/>
@@ -615,7 +623,8 @@ display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL, CLOCK
        <state_glyph node="131,15,21,11"/>
       </state>
       <state_glyph node="38,8,118,50">
-       <exit box="1,2,6,2"/>
+       <entry box="1,2,6,2"/>
+       <exit box="1,4,6,2"/>
       </state_glyph>
      </state>
      <state_glyph node="8,3,150,59"/>
@@ -631,7 +640,7 @@ display_clear();</exit>
       </initial_glyph>
      </initial>
      <tran trig="OK" target="../../1" cpref="../../1/0">
-      <tran_glyph conn="32,77,3,3,-34,-49,9">
+      <tran_glyph conn="32,77,3,3,-28,-49,3">
        <action box="-12,1,10,2"/>
       </tran_glyph>
      </tran>
