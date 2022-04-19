@@ -21,6 +21,8 @@
 #include "Alarm.h"
 #include "ClockAlarm_SM.h"
 
+Q_DEFINE_THIS_FILE;
+
 /*.$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*. Check for the minimum required QP version */
 #if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE^4294967295U) % 0x3E8U))
@@ -33,12 +35,62 @@
 void Alarm_Init(Alarm * const me) {
     QHSM_INIT( &me->super);
 }
+
+/*.${AOs::Alarm::Dispatch} .................................................*/
+void Alarm_Dispatch(Alarm * const me) {
+    QHSM_DISPATCH( &me->super );
+}
+
+/*.${AOs::Alarm::GetAlarmTime} .............................................*/
+uint32_t Alarm_GetAlarmTime(Alarm * const me) {
+    return (me->alarm_time);
+}
+
+/*.${AOs::Alarm::SetAlarmTime} .............................................*/
+void Alarm_SetAlarmTime(Alarm * const me, uint32_t alarm_time) {
+    me->alarm_time = alarm_time;
+}
+
+/*.${AOs::Alarm::SetStatus} ................................................*/
+void Alarm_SetStatus(Alarm * const me, uint8_t status) {
+    me->alarm_status = status;
+}
+
+/*.${AOs::Alarm::SM} .......................................................*/
+QState Alarm_initial(Alarm * const me) {
+    /*.${AOs::Alarm::SM::initial} */
+    /* Also set the alarm time at start-up */
+    me->alarm_time = INITIAL_ALARM_TIME;
+    /* Also set the alarm status to off at start-up */
+    me->alarm_status = ALARM_OFF;
+    return Q_TRAN(&Alarm_Alarm);
+}
+/*.${AOs::Alarm::SM::Alarm} ................................................*/
+QState Alarm_Alarm(Alarm * const me) {
+    QState status_;
+    switch (Q_SIG(me)) {
+        /*.${AOs::Alarm::SM::Alarm::ALARM_CHECK} */
+        case ALARM_CHECK_SIG: {
+            if( Q_PAR(me) == me->alarm_time )
+            {
+              QACTIVE_POST( AO_ClockAlarm, ALARM_SIG, 0u);
+            }
+            status_ = Q_HANDLED();
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&QHsm_top);
+            break;
+        }
+    }
+    return status_;
+}
 /*.$enddef${AOs::Alarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 /*.$define${AOs::Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*.${AOs::Alarm_ctor} ......................................................*/
 void Alarm_ctor(Alarm *const me) {
     /* This Class is based on QHsm and important point is that this will be called from container class */
-    QHsm_ctor( me, Q_STATE_CAST( &Alarm_initial) );
+    QHsm_ctor( &me->super, Q_STATE_CAST( &Alarm_initial) );
 }
 /*.$enddef${AOs::Alarm_ctor} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 

@@ -24,10 +24,22 @@
 typedef struct Alarm {
 /* protected: */
     QHsm super;
+
+/* private: */
+    uint32_t alarm_time;
+    uint8_t alarm_status;
 } Alarm;
 
 /* public: */
 void Alarm_Init(Alarm * const me);
+void Alarm_Dispatch(Alarm * const me);
+uint32_t Alarm_GetAlarmTime(Alarm * const me);
+void Alarm_SetAlarmTime(Alarm * const me, uint32_t alarm_time);
+void Alarm_SetStatus(Alarm * const me, uint8_t status);
+
+/* protected: */
+QState Alarm_initial(Alarm * const me);
+QState Alarm_Alarm(Alarm * const me);
 /*.$enddecl${AOs::Alarm} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 
 /*.$declare${AOs::Alarm_ctor} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/

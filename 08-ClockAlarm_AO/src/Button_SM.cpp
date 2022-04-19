@@ -17,7 +17,9 @@
 */
 /*.$endhead${AOs::../src::Button_SM.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 #include <Arduino.h>
+#include "main.h"
 #include "qpn.h"
+#include "ClockAlarm_SM.h"
 #include "Button_SM.h"
 
 /*.$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
@@ -45,6 +47,9 @@ QState Button_Button(Button * const me) {
     switch (Q_SIG(me)) {
         /*.${AOs::Button::SM::Button::Q_TIMEOUT} */
         case Q_TIMEOUT_SIG: {
+            uint8_t button1, button2;
+            uint8_t button_pad_value;
+
             /* Read the Button Status */
             button1 = digitalRead( PIN_BUTTON1 );
             button2 = digitalRead( PIN_BUTTON2 );

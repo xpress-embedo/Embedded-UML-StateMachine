@@ -18,6 +18,7 @@
 /*.$endhead${AOs::../src::ClockAlarm_SM.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 #include <Arduino.h>
 #include "qpn.h"
+#include "main.h"
 #include "lcd.h"
 #include "Alarm.h"
 #include "ClockAlarm_SM.h"
@@ -42,6 +43,7 @@ typedef struct Clock_Alarm {
     uint8_t temp_digit;
     uint8_t current_setting;
     Alarm alarm;
+    uint8_t timeout;
 
 /* private state histories */
     QStateHandler hist_Clock;
@@ -219,12 +221,8 @@ static QState Clock_Alarm_initial(Clock_Alarm * const me) {
 
     /* Set the current time at start-up */
     Clock_Alarm_SetCurrentTime( INITIAL_CURRENT_TIME );
-    /* Also set the alarm time at start-up */
-    me->alarm_time = INITIAL_ALARM_TIME;
     /* Also set the time-mode */
     me->time_mode = TIME_MODE_12H;
-    /* Also set the alarm status to off at start-up */
-    me->alarm_status = ALARM_OFF;
     /* state history attributes */
     /* state history attributes */
     me->hist_Clock = Q_STATE_CAST(&Clock_Alarm_Ticking);
@@ -243,13 +241,61 @@ static QState Clock_Alarm_Clock(Clock_Alarm * const me) {
         }
         /*.${AOs::Clock_Alarm::SM::Clock::ALARM} */
         case ALARM_SIG: {
-            /*.${AOs::Clock_Alarm::SM::Clock::ALARM::[AlarmIsTriggered?]} */
-            if (( me->alarm_status == ALARM_ON && Clock_Alarm_GetCurrentTime()/10 == me->alarm_time )) {
-                status_ = Q_TRAN(&Clock_Alarm_Notify);
+            status_ = Q_TRAN(&Clock_Alarm_Notify);
+            break;
+        }
+        /*.${AOs::Clock_Alarm::SM::Clock::TICK} */
+        case TICK_SIG: {
+            Q_SIG( &me->alarm) = ALARM_CHECK_SIG;
+            Q_PAR( &me->alarm) = Clock_Alarm_GetCurrentTime()/10u;
+            Alarm_Dispatch( &me->alarm );
+
+            if ( me->current_setting == NO_SETTING )
+            {
+              Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW,TICKING_CURR_TIME_COL );
             }
-            else {
-                status_ = Q_UNHANDLED();
+            else if(me->current_setting == ALARM_SETTING)
+            {
+              Clock_Alarm_DisplayCurrentTime( me, ALARM_SETTING_CURR_TIME_ROW, ALARM_SETTING_CURR_TIME_COL );
+              if( QHsm_state(me) != Q_STATE_CAST(&Clock_Alarm_Alarm_On_Off) )
+              {
+                Clock_Alarm_DisplayClockSettingTime( me, CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_COL );
+              }
+
+              if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_Hour_D1) )
+              {
+                display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_HOUR_D1_COL);
+              }
+              else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_Hour_D2) )
+              {
+                display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_HOUR_D2_COL);
+              }
+              else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_Min_D1) )
+              {
+                display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_MIN_D1_COL);
+              }
+              else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_Min_D2) )
+              {
+                display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_MIN_D2_COL);
+              }
+              else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_Sec_D1) )
+              {
+                display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_SEC_D1_COL);
+              }
+              else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_Sec_D2) )
+              {
+                display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_SEC_D2_COL);
+              }
+              else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_Format) )
+              {
+                display_set_cursor(CLOCK_SETTING_TIME_ROW,CLOCK_SETTING_TIME_FMT_COL);
+              }
+              else if( QHsm_state(me) == Q_STATE_CAST(&Clock_Alarm_Alarm_On_Off) )
+              {
+                display_set_cursor(CLOCK_SETTING_TIME_ROW,ALARM_SETTING_STATUS_COL);
+              }
             }
+            status_ = Q_HANDLED();
             break;
         }
         default: {
@@ -384,7 +430,8 @@ static QState Clock_Alarm_Settings(Clock_Alarm * const me) {
               {
                 me->temp_time = Convert12H_To_24H( me->temp_time, (time_format_t)me->temp_format);
               }
-              me->alarm_time = me->temp_time;
+              Alarm_SetAlarmTime( &me->alarm, me->temp_time );
+              Alarm_SetStatus( &me->alarm, me->temp_digit );
             }
             status_ = Q_TRAN(&Clock_Alarm_Ticking);
             break;
@@ -733,6 +780,8 @@ static QState Clock_Alarm_Error(Clock_Alarm * const me) {
         /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error} */
         case Q_ENTRY_SIG: {
             display_cursor_off_blinkoff();
+
+            QActive_armX( AO_ClockAlarm, 0, MS_TO_TICKS(500), MS_TO_TICKS(500) );
             status_ = Q_HANDLED();
             break;
         }
@@ -740,7 +789,8 @@ static QState Clock_Alarm_Error(Clock_Alarm * const me) {
         case Q_EXIT_SIG: {
             /* Erase the error message */
             display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL, CLOCK_SETTING_ERR_MSG_COL_END);
-            me->timeout = 0u;
+
+            QActive_disarmX( AO_ClockAlarm, 0);
             status_ = Q_HANDLED();
             break;
         }
@@ -751,6 +801,14 @@ static QState Clock_Alarm_Error(Clock_Alarm * const me) {
         }
         /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error::OK} */
         case OK_SIG: {
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error::TICK} */
+        case TICK_SIG: {
+            Q_SIG( &me->alarm) = ALARM_CHECK_SIG;
+            Q_PAR( &me->alarm) = Clock_Alarm_GetCurrentTime()/10u;
+            Alarm_Dispatch( &me->alarm );
             status_ = Q_HANDLED();
             break;
         }
@@ -771,19 +829,9 @@ static QState Clock_Alarm_Error_On(Clock_Alarm * const me) {
             status_ = Q_HANDLED();
             break;
         }
-        /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error::Error_On::TICK} */
-        case TICK_SIG: {
-            /* Increment the timeout variable */
-            me->timeout++;
-            /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error::Error_On::TICK::[Timeout?]} */
-            if (me->timeout == 10) {
-                /* reset the timeout counter */
-                me->timeout = 0u;
-                status_ = Q_TRAN(&Clock_Alarm_Error_Off);
-            }
-            else {
-                status_ = Q_UNHANDLED();
-            }
+        /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error::Error_On::Q_TIMEOUT} */
+        case Q_TIMEOUT_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Error_Off);
             break;
         }
         default: {
@@ -804,18 +852,9 @@ static QState Clock_Alarm_Error_Off(Clock_Alarm * const me) {
             status_ = Q_HANDLED();
             break;
         }
-        /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error::Error_Off::TICK} */
-        case TICK_SIG: {
-            me->timeout++;
-            /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error::Error_Off::TICK::[Timeout?]} */
-            if (me->timeout == 10) {
-                /* reset the timeout counter */
-                me->timeout = 0u;
-                status_ = Q_TRAN(&Clock_Alarm_Error_On);
-            }
-            else {
-                status_ = Q_UNHANDLED();
-            }
+        /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error::Error_Off::Q_TIMEOUT} */
+        case Q_TIMEOUT_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Error_On);
             break;
         }
         default: {
@@ -842,12 +881,14 @@ static QState Clock_Alarm_Notify(Clock_Alarm * const me) {
     switch (Q_SIG(me)) {
         /*.${AOs::Clock_Alarm::SM::Notify} */
         case Q_ENTRY_SIG: {
-            me->timeout = 0;
+            me->timeout = 20u;
+            QActive_armX( AO_ClockAlarm, 0, MS_TO_TICKS(500), MS_TO_TICKS(500) );
             status_ = Q_HANDLED();
             break;
         }
         /*.${AOs::Clock_Alarm::SM::Notify} */
         case Q_EXIT_SIG: {
+            QActive_disarmX( AO_ClockAlarm, 0);
             display_clear();
             status_ = Q_HANDLED();
             break;
@@ -862,17 +903,9 @@ static QState Clock_Alarm_Notify(Clock_Alarm * const me) {
             status_ = Q_TRAN_HIST(me->hist_Clock);
             break;
         }
-        /*.${AOs::Clock_Alarm::SM::Notify::TICK} */
-        case TICK_SIG: {
-            Clock_Alarm_DisplayCurrentTime( me, ALARM_SETTING_CURR_TIME_ROW, ALARM_SETTING_CURR_TIME_COL);
-            /*.${AOs::Clock_Alarm::SM::Notify::TICK::[AlarmTimeout?]} */
-            if (++me->alarm_timeout == 200u) {
-                me->alarm_timeout = 0u;
-                status_ = Q_TRAN(&Clock_Alarm_Ticking);
-            }
-            else {
-                status_ = Q_UNHANDLED();
-            }
+        /*.${AOs::Clock_Alarm::SM::Notify::Q_TIMEOUT} */
+        case Q_TIMEOUT_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Clock);
             break;
         }
         default: {
@@ -892,12 +925,10 @@ static QState Clock_Alarm_Notify_Msg_On(Clock_Alarm * const me) {
             status_ = Q_HANDLED();
             break;
         }
-        /*.${AOs::Clock_Alarm::SM::Notify::Notify_Msg_On::TICK} */
-        case TICK_SIG: {
-            me->timeout++;
-            /*.${AOs::Clock_Alarm::SM::Notify::Notify_Msg_On::TICK::[Timeout?]} */
-            if (me->timeout == 10) {
-                me->timeout = 0;
+        /*.${AOs::Clock_Alarm::SM::Notify::Notify_Msg_On::Q_TIMEOUT} */
+        case Q_TIMEOUT_SIG: {
+            /*.${AOs::Clock_Alarm::SM::Notify::Notify_Msg_On::Q_TIMEOUT::[Timeout?]} */
+            if (me->timeout) {
                 status_ = Q_TRAN(&Clock_Alarm_Notify_Msg_Off);
             }
             else {
@@ -922,17 +953,10 @@ static QState Clock_Alarm_Notify_Msg_Off(Clock_Alarm * const me) {
             status_ = Q_HANDLED();
             break;
         }
-        /*.${AOs::Clock_Alarm::SM::Notify::Notify_Msg_Off::TICK} */
-        case TICK_SIG: {
-            me->timeout++;
-            /*.${AOs::Clock_Alarm::SM::Notify::Notify_Msg_Off::TICK::[Timeout?]} */
-            if (me->timeout == 10) {
-                me->timeout = 0;
-                status_ = Q_TRAN(&Clock_Alarm_Notify_Msg_On);
-            }
-            else {
-                status_ = Q_UNHANDLED();
-            }
+        /*.${AOs::Clock_Alarm::SM::Notify::Notify_Msg_Off::Q_TIMEOUT} */
+        case Q_TIMEOUT_SIG: {
+            --me->timeout;
+            status_ = Q_TRAN(&Clock_Alarm_Notify_Msg_On);
             break;
         }
         default: {
