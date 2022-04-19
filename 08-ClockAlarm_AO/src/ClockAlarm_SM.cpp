@@ -226,7 +226,7 @@ static QState Clock_Alarm_initial(Clock_Alarm * const me) {
     /* state history attributes */
     /* state history attributes */
     me->hist_Clock = Q_STATE_CAST(&Clock_Alarm_Ticking);
-    return Q_TRAN(&Clock_Alarm_Ticking);
+    return Q_TRAN(&Clock_Alarm_Clock);
 }
 /*.${AOs::Clock_Alarm::SM::Clock} ..........................................*/
 static QState Clock_Alarm_Clock(Clock_Alarm * const me) {
@@ -237,6 +237,11 @@ static QState Clock_Alarm_Clock(Clock_Alarm * const me) {
             /* save deep history */
             me->hist_Clock = QHsm_state(me);
             status_ = Q_HANDLED();
+            break;
+        }
+        /*.${AOs::Clock_Alarm::SM::Clock::initial} */
+        case Q_INIT_SIG: {
+            status_ = Q_TRAN(&Clock_Alarm_Ticking);
             break;
         }
         /*.${AOs::Clock_Alarm::SM::Clock::ALARM} */
@@ -348,12 +353,6 @@ static QState Clock_Alarm_Ticking(Clock_Alarm * const me) {
               me->temp_format = FORMAT_24H;
             }
             status_ = Q_TRAN(&Clock_Alarm_Settings);
-            break;
-        }
-        /*.${AOs::Clock_Alarm::SM::Clock::Ticking::TICK} */
-        case TICK_SIG: {
-            Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW, TICKING_CURR_TIME_COL );
-            status_ = Q_HANDLED();
             break;
         }
         /*.${AOs::Clock_Alarm::SM::Clock::Ticking::OK} */
@@ -1153,8 +1152,15 @@ void display_erase_block( uint8_t row, uint8_t col_start, uint8_t col_stop )
 
 ISR( TIMER1_COMPA_vect )
 {
+  static uint8_t count = 0u;
   /* 5) Call QF_tickXISR() from your application's tick ISR */
   /* This gives the framework to process the timeout events */
   QF_tickXISR(0);
-  Clock_Alarm_UpdateCurrentTime();
+  count++;
+  if( count == 100u )
+  {
+    count = 0u;
+    Clock_Alarm_UpdateCurrentTime();
+    QACTIVE_POST_ISR( AO_ClockAlarm, TICK_SIG, 0u);
+  }
 }

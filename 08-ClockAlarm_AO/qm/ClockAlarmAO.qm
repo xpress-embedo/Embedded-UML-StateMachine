@@ -115,7 +115,7 @@ else
 display_write( time_as_string, row, col);</code>
    </operation>
    <statechart properties="0x01">
-    <initial target="../1/3">
+    <initial target="../1">
      <action>/* Initialize the Alarm Component */
 Alarm_Init( &amp;me-&gt;alarm );
 
@@ -123,12 +123,17 @@ Alarm_Init( &amp;me-&gt;alarm );
 Clock_Alarm_SetCurrentTime( INITIAL_CURRENT_TIME );
 /* Also set the time-mode */
 me-&gt;time_mode = TIME_MODE_12H;</action>
-     <initial_glyph conn="4,2,4,3,15,8">
+     <initial_glyph conn="4,2,4,3,6,4">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
     <state name="Clock">
-     <history type="deep" target="../3">
+     <initial target="../4">
+      <initial_glyph conn="12,10,5,0,6,4">
+       <action box="0,-2,10,2"/>
+      </initial_glyph>
+     </initial>
+     <history type="deep" target="../4">
       <history_glyph conn="8,28,3,2,6,-4"/>
      </history>
      <tran trig="ALARM" target="../../2">
@@ -195,7 +200,7 @@ else if(me-&gt;current_setting == ALARM_SETTING)
 me-&gt;current_setting = NO_SETTING;</entry>
       <exit>/* Clear the display, while exiting this state */
 display_clear();</exit>
-      <tran trig="SET" target="../../4">
+      <tran trig="SET" target="../../5">
        <action>/* Set Signal is Received this means it is a clock setting */
 me-&gt;current_setting = CLOCK_SETTING;
 /* get the current time in temp variable */
@@ -222,13 +227,7 @@ else
         <action box="0,-2,10,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="TICK">
-       <action>Clock_Alarm_DisplayCurrentTime( me, TICKING_CURR_TIME_ROW, TICKING_CURR_TIME_COL );</action>
-       <tran_glyph conn="12,22,3,-1,12">
-        <action box="0,-2,10,2"/>
-       </tran_glyph>
-      </tran>
-      <tran trig="OK" target="../../4">
+      <tran trig="OK" target="../../5">
        <action>/* OK Signal is Received this means it is a Alarm setting */
 me-&gt;current_setting = ALARM_SETTING;
 /* get the current time in temp variable */
@@ -273,7 +272,7 @@ display_cursor_off_blinkoff();</exit>
         <action box="0,-2,10,2"/>
        </initial_glyph>
       </initial>
-      <tran trig="OK" target="../../3">
+      <tran trig="OK" target="../../4">
        <action>/* take action based on the current setting */
 if( me-&gt;current_setting == CLOCK_SETTING )
 {
@@ -306,7 +305,7 @@ else if( me-&gt;current_setting == ALARM_SETTING )
         <action box="0,-2,10,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="ABRT" target="../../3">
+      <tran trig="ABRT" target="../../4">
        <tran_glyph conn="38,48,3,2,-12,-24">
         <action box="0,-2,10,2"/>
        </tran_glyph>
@@ -639,7 +638,7 @@ display_clear();</exit>
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
-     <tran trig="OK" target="../../1" cpref="../../1/0">
+     <tran trig="OK" target="../../1" cpref="../../1/1">
       <tran_glyph conn="32,77,3,3,-28,-49,3">
        <action box="-12,1,10,2"/>
       </tran_glyph>
@@ -1005,10 +1004,17 @@ void display_erase_block( uint8_t row, uint8_t col_start, uint8_t col_stop )
 
 ISR( TIMER1_COMPA_vect )
 {
+  static uint8_t count = 0u;
   /* 5) Call QF_tickXISR() from your application's tick ISR */
   /* This gives the framework to process the timeout events */
   QF_tickXISR(0);
-  Clock_Alarm_UpdateCurrentTime();
+  count++;
+  if( count == 100u )
+  {
+    count = 0u;
+    Clock_Alarm_UpdateCurrentTime();
+    QACTIVE_POST_ISR( AO_ClockAlarm, TICK_SIG, 0u);
+  }
 }
 </text>
    </file>
