@@ -128,6 +128,7 @@ void QV_onIdle( void )
 {
   /* this function called with interrupts DISABLED, and can be used to perform
      activity/task like staying in sleep mode */
+  QV_CPU_SLEEP();
 }
 
 Q_NORETURN Q_onAssert( char const Q_ROM * const module, int location )
