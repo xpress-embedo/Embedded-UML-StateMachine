@@ -792,7 +792,7 @@ static QState Clock_Alarm_Error(Clock_Alarm * const me) {
         /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error} */
         case Q_ENTRY_SIG: {
             display_cursor_off_blinkoff();
-
+            display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, 0, 15);
             QActive_armX( AO_ClockAlarm, 0, MS_TO_TICKS(500), MS_TO_TICKS(500) );
             status_ = Q_HANDLED();
             break;
@@ -801,7 +801,6 @@ static QState Clock_Alarm_Error(Clock_Alarm * const me) {
         case Q_EXIT_SIG: {
             /* Erase the error message */
             display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL, CLOCK_SETTING_ERR_MSG_COL_END);
-
             QActive_disarmX( AO_ClockAlarm, 0);
             status_ = Q_HANDLED();
             break;
@@ -822,6 +821,12 @@ static QState Clock_Alarm_Error(Clock_Alarm * const me) {
             Q_PAR( &me->alarm) = Clock_Alarm_GetCurrentTime()/10u;
             Alarm_Dispatch( &me->alarm );
             status_ = Q_HANDLED();
+            break;
+        }
+        /*.${AOs::Clock_Alarm::SM::Clock::Settings::Error::SET} */
+        case SET_SIG: {
+            display_cursor_on_blinkon();
+            status_ = Q_TRAN(&Clock_Alarm_Settings);
             break;
         }
         default: {
@@ -880,6 +885,31 @@ static QState Clock_Alarm_Error_Off(Clock_Alarm * const me) {
 static QState Clock_Alarm_Alarm_On_Off(Clock_Alarm * const me) {
     QState status_;
     switch (Q_SIG(me)) {
+        /*.${AOs::Clock_Alarm::SM::Clock::Settings::Alarm_On_Off} */
+        case Q_ENTRY_SIG: {
+            display_erase_block( ALARM_SETTING_STATUS_ROW, 0, 15);
+            me->temp_digit = 0U;
+            display_write( "ALARM OFF", ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+            display_set_cursor( ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /*.${AOs::Clock_Alarm::SM::Clock::Settings::Alarm_On_Off::SET} */
+        case SET_SIG: {
+            if( me->temp_digit )
+            {
+              display_write("ALARM OFF", ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+              me->temp_digit = 0;
+            }
+            else
+            {
+              display_write("ALARM ON ", ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+              me->temp_digit = 1;
+            }
+            display_set_cursor( ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+            status_ = Q_HANDLED();
+            break;
+        }
         default: {
             status_ = Q_SUPER(&Clock_Alarm_Settings);
             break;

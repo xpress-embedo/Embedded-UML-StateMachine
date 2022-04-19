@@ -565,13 +565,12 @@ display_set_cursor( CLOCK_SETTING_TIME_ROW, CLOCK_SETTING_TIME_FMT_COL );</actio
       </state>
       <state name="Error">
        <entry>display_cursor_off_blinkoff();
-
+display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, 0, 15);
 QActive_armX( AO_ClockAlarm, 0, MS_TO_TICKS(500), MS_TO_TICKS(500) );</entry>
        <exit>/* Erase the error message */
 display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL, CLOCK_SETTING_ERR_MSG_COL_END);
-
 QActive_disarmX( AO_ClockAlarm, 0);</exit>
-       <initial target="../3">
+       <initial target="../4">
         <initial_glyph conn="120,49,5,2,4,-4">
          <action box="1,-1,10,2"/>
         </initial_glyph>
@@ -590,9 +589,15 @@ Alarm_Dispatch( &amp;me-&gt;alarm );</action>
          <action box="0,-2,10,2"/>
         </tran_glyph>
        </tran>
+       <tran trig="SET" target="../..">
+        <action>display_cursor_on_blinkon();</action>
+        <tran_glyph conn="144,34,0,1,-6,12">
+         <action box="0,-4,10,2"/>
+        </tran_glyph>
+       </tran>
        <state name="Error_On">
         <entry>display_write( &quot;Error!&quot;, CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL);</entry>
-        <tran trig="Q_TIMEOUT" target="../../4">
+        <tran trig="Q_TIMEOUT" target="../../5">
          <tran_glyph conn="130,43,1,3,10">
           <action box="0,-2,10,2"/>
          </tran_glyph>
@@ -604,7 +609,7 @@ Alarm_Dispatch( &amp;me-&gt;alarm );</action>
        <state name="Error_Off">
         <entry>/* Erase the error message */
 display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL, CLOCK_SETTING_ERR_MSG_COL_END);</entry>
-        <tran trig="Q_TIMEOUT" target="../../3">
+        <tran trig="Q_TIMEOUT" target="../../4">
          <tran_glyph conn="145,45,2,2,4,-18,-4">
           <action box="-15,5,10,2"/>
          </tran_glyph>
@@ -619,7 +624,29 @@ display_erase_block( CLOCK_SETTING_ERR_MSG_ROW, CLOCK_SETTING_ERR_MSG_COL, CLOCK
        </state_glyph>
       </state>
       <state name="Alarm_On_Off">
-       <state_glyph node="131,15,21,11"/>
+       <entry>display_erase_block( ALARM_SETTING_STATUS_ROW, 0, 15);
+me-&gt;temp_digit = 0U;
+display_write( &quot;ALARM OFF&quot;, ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+display_set_cursor( ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);</entry>
+       <tran trig="SET">
+        <action>if( me-&gt;temp_digit )
+{
+  display_write(&quot;ALARM OFF&quot;, ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+  me-&gt;temp_digit = 0;
+}
+else
+{
+  display_write(&quot;ALARM ON &quot;, ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);
+  me-&gt;temp_digit = 1;
+}
+display_set_cursor( ALARM_SETTING_STATUS_ROW, ALARM_SETTING_STATUS_COL);</action>
+        <tran_glyph conn="131,24,3,-1,13">
+         <action box="0,-2,10,2"/>
+        </tran_glyph>
+       </tran>
+       <state_glyph node="131,15,21,11">
+        <entry box="1,2,6,2"/>
+       </state_glyph>
       </state>
       <state_glyph node="38,8,118,50">
        <entry box="1,2,6,2"/>
